@@ -1,0 +1,6 @@
+objs/*
+render
+logs/*
+report*
+compile_commands.json
+.cache/*
