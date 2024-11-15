@@ -1,14 +1,18 @@
+#pragma once
+
 #include "camera.h"
-#include "polygon.h"
+#include "cameraRotator.h"
+#include "triangle.h"
 
 class Scene {
  public:
-  std::vector<Polygon> polygons;
+  std::vector<Triangle> triangles;
   Camera camera;
+  CameraRotator cameraRotator;
 
   Scene();
-  Scene(const std::vector<Polygon>& objs, const Camera& cam);
+  Scene(const std::vector<Triangle>& triangles, const Camera& cam,
+        const CameraRotator& camRotator);
 
-  void serialize(int& numPolygons, int& numVertices, float* vertices,
-                 int* endIndices, float* colors);
+  void serialize(int& numTriangles, float* vertices, float* colors);
 };

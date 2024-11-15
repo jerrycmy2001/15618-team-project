@@ -1,4 +1,7 @@
 #include <algorithm>
+
+#include "Vector3.h"
+#include "triangle.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdio.h>
@@ -40,10 +43,10 @@ void RefRenderer::allocOutputImage(int width, int height) {
 // the clear depends on the scene being rendered.
 void RefRenderer::clearImage() { image->clear(1.f, 1.f, 1.f, 1.f); }
 
-void RefRenderer::loadScene(SceneName scene) {
-  sceneName = scene;
-  loadCircleScene(sceneName, numPolygons, numVertices, vertices, endIndices,
-                  colors);
+void RefRenderer::loadScene(SceneName name) {
+  this->sceneName = name;
+  ::loadScene(name, image->width, image->height);
+  scene->serialize(numTriangles, vertices, colors);
 }
 
 // advanceAnimation --
@@ -78,76 +81,111 @@ static inline void lookupColor(float coord, float& r, float& g, float& b) {
       (weight * lookupTable[base + 1][2]);
 }
 
-// // shadePixel --
-// //
-// // Computes the contribution of the specified circle to the
-// // given pixel.  All values are provided in normalized space, where
-// // the screen spans [0,2]^2.  The color/opacity of the circle is
-// // computed at the pixel center.
-// void RefRenderer::shadePixel(float pixelCenterX, float pixelCenterY, float
-// px,
-//                              float py, float pz, float* pixelData,
-//                              int circleIndex) {
-//   float diffX = px - pixelCenterX;
-//   float diffY = py - pixelCenterY;
-//   float pixelDist = diffX * diffX + diffY * diffY;
+float edgeFunction(float px, float py, float x1, float y1, float x2, float y2) {
+  return (py - y1) * (x2 - x1) - (px - x1) * (y2 - y1);
+}
 
-//   float rad = radius[circleIndex];
-//   float maxDist = rad * rad;
+float getTriangleZ(float px, float py, float* projectedVertices) {
+  float e1 = edgeFunction(px, py, projectedVertices[0], projectedVertices[1],
+                          projectedVertices[3], projectedVertices[4]);
+  float e2 = edgeFunction(px, py, projectedVertices[3], projectedVertices[4],
+                          projectedVertices[6], projectedVertices[7]);
+  float e3 = edgeFunction(px, py, projectedVertices[6], projectedVertices[7],
+                          projectedVertices[0], projectedVertices[1]);
+  if ((e1 >= 0 && e2 >= 0 && e3 >= 0) || (e1 <= 0 && e2 <= 0 && e3 <= 0)) {
+    return e1 * projectedVertices[8] + e2 * projectedVertices[2] +
+           e3 * projectedVertices[5];
+  } else {
+    return -1;
+  }
+}
 
-//   // circle does not contribute to the image
-//   if (pixelDist > maxDist) return;
+void rasterization(int numPolygons, float* projectedVertices,
+                   const float* vertices, const float* colors, float* outColor,
+                   int x, int y) {
+  float minZ = 1.f;
+  for (int i = 0; i < numPolygons; i++) {
+    float z = getTriangleZ(x, y, projectedVertices);
+    if (z < 0) {
+      // not in triangle
+      continue;
+    }
+    if (z < minZ) {
+      minZ = z;
+      outColor[0] = colors[i * 4];
+      outColor[1] = colors[i * 4 + 1];
+      outColor[2] = colors[i * 4 + 2];
+      outColor[3] = colors[i * 4 + 3];
+    }
+  }
+}
 
-//   float colR, colG, colB;
-//   float alpha;
+// Triangle* RefRenderer::initializePolygons() {
+//   Triangle* triangles = new Triangle[numTriangles];
 
-//   // there is a non-zero contribution.  Now compute the shading
-//   if (sceneName == SNOWFLAKES || sceneName == SNOWFLAKES_SINGLE_FRAME) {
-//     // Snowflake opacity falls off with distance from center.
-//     // Snowflake color is determined by distance from center and
-//     // radially symmetric.  The color value f(dist) is looked up
-//     // from a table.
+//   for (int polygonIndex = 0; polygonIndex < numTriangles; ++polygonIndex) {
+//     std::array<Vector3, 3> polygonVertices;
 
-//     const float kCircleMaxAlpha = .5f;
-//     const float falloffScale = 4.f;
+//     for (int i = 0; i < 9; i += 3) {
+//       polygonVertices[i] =
+//           Vector3(vertices[i], vertices[i + 1], vertices[i + 2]);
+//     }
 
-//     float normPixelDist = sqrt(pixelDist) / rad;
-//     lookupColor(normPixelDist, colR, colG, colB);
+//     std::array<float, 4> polygonColors = {
+//         colors[polygonIndex], colors[polygonIndex + 1],
+//         colors[polygonIndex + 2], colors[polygonIndex + 3]};
 
-//     float maxAlpha = kCircleMaxAlpha * CLAMP(.6f + .4f * (1.f - pz),
-//     0.f, 1.f); alpha = maxAlpha * exp(-1.f * falloffScale * normPixelDist *
-//     normPixelDist);
-
-//   } else {
-//     // simple: each circle has an assigned color
-//     int index3 = 3 * circleIndex;
-//     colR = color[index3];
-//     colG = color[index3 + 1];
-//     colB = color[index3 + 2];
-//     alpha = .5f;
+//     triangles[polygonIndex] = Triangle(polygonVertices, polygonColors);
 //   }
 
-//   // The following code is *very important*: it blends the
-//   // contribution of the circle primitive with the current state
-//   // of the output image pixel.  This is a read-modify-write
-//   // operation on the image, and it needs to be atomic.  Moreover,
-//   // (and even more challenging) all writes to this pixel must be
-//   // performed in same order as when the circles are processed
-//   // serially.
-//   //
-//   // That is, if circle 1 and circle 2 both write to pixel P.
-//   // circle 1's contribution *must* be blended in first, then
-//   // circle 2's.  If this invariant is not preserved, the
-//   // rendering of transparent circles will not be correct.
-
-//   float oneMinusAlpha = 1.f - alpha;
-//   pixelData[0] = alpha * colR + oneMinusAlpha * pixelData[0];
-//   pixelData[1] = alpha * colG + oneMinusAlpha * pixelData[1];
-//   pixelData[2] = alpha * colB + oneMinusAlpha * pixelData[2];
-//   pixelData[3] += alpha;
+//   return triangles;
 // }
 
+void calClipSpaceVertex(float result[4], float combinedMatrix[4][4],
+                        float vec4[4]) {
+  for (int i = 0; i < 4; ++i) {
+    result[i] = combinedMatrix[i][0] * vec4[0] +
+                combinedMatrix[i][1] * vec4[1] +
+                combinedMatrix[i][2] * vec4[2] + combinedMatrix[i][3] * vec4[3];
+  }
+}
+
+Vector3 RefRenderer::transformVertex(const Vector3& vertex) {
+  float combinedMatrix[4][4];
+  scene->camera.calculateViewMatrix(combinedMatrix);
+
+  float vec4[4] = {vertex.x, vertex.y, vertex.z, 1.0f};
+
+  float clipSpaceVertex[4];
+  calClipSpaceVertex(clipSpaceVertex, combinedMatrix, vec4);
+
+  Vector3 vec3{vec4[0] / vec4[3], vec4[1] / vec4[3], vec4[2] / vec4[3]};
+
+  return Vector3((vec3.x + 1.0) / 2.0, (vec3.y + 1.0) / 2.0, vec3.z);
+}
+
 void RefRenderer::render() {
+  float* projectedVertices = new float[numTriangles * 3 * 3];
+
+  for (int i = 0; i < numTriangles; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      Vector3 vec = transformVertex(Vector3(vertices[i * 9 + j * 3],
+                                            vertices[i * 9 + j * 3 + 1],
+                                            vertices[i * 9 + j * 3 + 2]));
+      projectedVertices[i * 9 + j * 3] = vec.x;
+      projectedVertices[i * 9 + j * 3 + 1] = vec.y;
+      projectedVertices[i * 9 + j * 3 + 2] = vec.z;
+    }
+  }
+
+  for (int x = 0; x < image->width; x++) {
+    for (int y = 0; y < image->height; y++) {
+      float px = (x + 0.5f) / image->width;
+      float py = (y + 0.5f) / image->height;
+      rasterization(numTriangles, projectedVertices, vertices, colors,
+                    &image->data[4 * (y * image->width + x)], px, py);
+    }
+  }
   // render all circles
   // for (int circleIndex = 0; circleIndex < numberOfCircles; circleIndex++) {
   //   int index3 = 3 * circleIndex;

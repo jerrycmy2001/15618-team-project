@@ -2,6 +2,7 @@
 #define __REF_RENDERER_H__
 
 #include "renderer.h"
+#include "triangle.h"
 
 class RefRenderer : public Renderer {
  private:
@@ -28,6 +29,10 @@ class RefRenderer : public Renderer {
 
   void shadePixel(float pixelCenterX, float pixelCenterY, float px, float py,
                   float pz, float* pixelData, int circleIndex);
+
+  Triangle* initializePolygons();
+
+  Vector3 transformVertex(const Vector3& vertex);
 };
 
 #endif

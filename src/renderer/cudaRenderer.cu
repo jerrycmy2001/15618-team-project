@@ -45,9 +45,7 @@ struct GlobalConstants {
   SceneName sceneName;
 
   int numPolygons;
-  int numVertices;
   float *vertices;
-  int *endIndices;
   float *colors;
 
   int imageWidth;
@@ -253,10 +251,10 @@ const Image *CudaRenderer::getImage() {
   return image;
 }
 
-void CudaRenderer::loadScene(SceneName scene) {
-  sceneName = scene;
-  loadCircleScene(sceneName, numPolygons, numVertices, vertices, endIndices,
-                  colors);
+void CudaRenderer::loadScene(SceneName name) {
+  sceneName = name;
+  ::loadScene(sceneName, image->width, image->height);
+  scene->serialize(numTriangles, vertices, colors);
 }
 
 void CudaRenderer::setup() {
@@ -299,9 +297,8 @@ void CudaRenderer::setup() {
   // See the CUDA Programmer's Guide for descriptions of
   // cudaMalloc and cudaMemcpy
 
-  cudaMalloc(&cudaDeviceVertices, sizeof(float) * 3 * numVertices);
-  cudaMalloc(&cudaDeviceEndIndices, sizeof(float) * (numPolygons + 1));
-  cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numPolygons);
+  cudaMalloc(&cudaDeviceVertices, sizeof(float) * 3 * numTriangles);
+  cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numTriangles);
   cudaMalloc(&cudaDeviceImageData,
              sizeof(float) * 4 * image->width * image->height);
 
@@ -326,10 +323,8 @@ void CudaRenderer::setup() {
 
   GlobalConstants params;
   params.sceneName = sceneName;
-  params.numPolygons = numPolygons;
-  params.numVertices = numVertices;
+  params.numPolygons = numTriangles;
   params.vertices = cudaDeviceVertices;
-  params.endIndices = cudaDeviceEndIndices;
   params.colors = cudaDeviceColors;
   params.imageWidth = image->width;
   params.imageHeight = image->height;

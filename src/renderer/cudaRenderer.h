@@ -1,10 +1,6 @@
 #ifndef __CUDA_RENDERER_H__
 #define __CUDA_RENDERER_H__
 
-#ifndef uint
-#define uint unsigned int
-#endif
-
 #include "renderer.h"
 
 class CudaRenderer : public Renderer {

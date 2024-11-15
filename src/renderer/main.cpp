@@ -95,8 +95,15 @@ int main(int argc, char** argv) {
   }
 
   sceneNameStr = argv[optind];
+  sceneName = SINGLE_TRIANGLE;
 
-  sceneName = SIMPLE_TRIANGLE;
+  if (sceneNameStr.compare("single") == 0) {
+    sceneName = SINGLE_TRIANGLE;
+  } else if (sceneNameStr.compare("double") == 0) {
+    sceneName = DOUBLE_OVERLAPPING_TRIANGLES;
+  } else if (sceneNameStr.compare("non-orthogonal") == 0) {
+    sceneName = NON_ORTHOGONAL_TRIANGLES;
+  }
 
   printf("Rendering to %dx%d image\n", imageSize, imageSize);
 

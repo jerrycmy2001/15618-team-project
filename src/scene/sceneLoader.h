@@ -4,7 +4,7 @@
 #include "renderer.h"
 #include "scene.h"
 
-void loadCircleScene(SceneName sceneName, int& numPolygons, int& numVertices,
-                     float* vertices, int* endIndices, float* colors);
+std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
+                                 int windowHeight);
 
 #endif

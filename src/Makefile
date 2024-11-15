@@ -2,12 +2,12 @@
 CXX = g++ -m64
 NVCC = nvcc
 CXXFLAGS=-O3 -Wall -g
-NVCCFLAGS=-O3 -m64 -ccbin /usr/bin/gcc
+NVCCFLAGS=-O3 -m64
 LIBS = GL glut cudart
 LDLIBS  := $(addprefix -l, $(LIBS))
 
 # Directories
-SRC_DIRS = renderer scene utils include 3d_objects
+SRC_DIRS = renderer scene utils include 3d_objects camera
 OBJ_DIR = objs
 
 CXXFLAGS += $(addprefix -I, $(SRC_DIRS))
