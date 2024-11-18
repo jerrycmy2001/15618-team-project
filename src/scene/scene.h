@@ -1,8 +1,19 @@
 #pragma once
 
+#include <string>
+
+#include "3d_object.h"
 #include "camera.h"
 #include "cameraRotator.h"
-#include "triangle.h"
+
+typedef enum {
+  SINGLE_TRIANGLE,
+  DOUBLE_OVERLAPPING_TRIANGLES,
+  NON_ORTHOGONAL_TRIANGLES,
+  SQUARE,
+} SceneName;
+
+SceneName getSceneFromName(std::string name);
 
 class Scene {
  public:

@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "3d_object.h"
 #include "Vector3.h"
-#include "triangle.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdio.h>

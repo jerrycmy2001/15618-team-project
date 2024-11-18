@@ -1,8 +1,8 @@
 #ifndef __REF_RENDERER_H__
 #define __REF_RENDERER_H__
 
+#include "3d_object.h"
 #include "renderer.h"
-#include "triangle.h"
 
 class RefRenderer : public Renderer {
  private:

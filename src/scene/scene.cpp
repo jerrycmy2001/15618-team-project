@@ -2,7 +2,22 @@
 
 #include <cstdio>
 
-#include "triangle.h"
+#include "3d_object.h"
+
+SceneName getSceneFromName(std::string name) {
+  if (name == "single") {
+    return SceneName::SINGLE_TRIANGLE;
+  } else if (name == "double") {
+    return SceneName::DOUBLE_OVERLAPPING_TRIANGLES;
+  } else if (name == "non-orthogonal") {
+    return SceneName::NON_ORTHOGONAL_TRIANGLES;
+  } else if (name == "square") {
+    return SceneName::SQUARE;
+  } else {
+    printf("Unknown scene name: %s\n", name.c_str());
+    exit(1);
+  }
+}
 
 Scene::Scene() {}
 

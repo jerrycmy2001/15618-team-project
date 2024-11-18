@@ -10,13 +10,6 @@ struct Image;
 // fireworks constants
 #define NUM_FIREWORKS 15
 #define NUM_SPARKS 20
-
-typedef enum {
-  SINGLE_TRIANGLE,
-  DOUBLE_OVERLAPPING_TRIANGLES,
-  NON_ORTHOGONAL_TRIANGLES
-} SceneName;
-
 class Renderer {
  protected:
   SceneName sceneName;
