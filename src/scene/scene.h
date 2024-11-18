@@ -14,5 +14,5 @@ class Scene {
   Scene(const std::vector<Triangle>& triangles, const Camera& cam,
         const CameraRotator& camRotator);
 
-  void serialize(int& numTriangles, float* vertices, float* colors);
+  void serialize(int& numTriangles, float*& vertices, float*& colors);
 };

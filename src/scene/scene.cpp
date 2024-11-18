@@ -1,5 +1,7 @@
 #include "scene.h"
 
+#include <cstdio>
+
 #include "triangle.h"
 
 Scene::Scene() {}
@@ -8,14 +10,14 @@ Scene::Scene(const std::vector<Triangle>& objs, const Camera& cam,
              const CameraRotator& camRotator)
     : triangles(objs), camera(cam), cameraRotator(camRotator) {}
 
-void Scene::serialize(int& numTriangles, float* vertices, float* colors) {
+void Scene::serialize(int& numTriangles, float*& vertices, float*& colors) {
   numTriangles = triangles.size();
 
   vertices = new float[numTriangles * 3 * 3];
   colors = new float[numTriangles * 4];
 
   for (int i = 0; i < numTriangles; i++) {
-    for (int j = 0; j < triangles[i].vertices.size(); j++) {
+    for (int j = 0; j < 3; j++) {
       vertices[i * 9 + j * 3] = triangles[i].vertices[j].x;
       vertices[i * 9 + j * 3 + 1] = triangles[i].vertices[j].y;
       vertices[i * 9 + j * 3 + 2] = triangles[i].vertices[j].z;

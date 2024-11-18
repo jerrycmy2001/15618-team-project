@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <limits>
 
 #include "Vector3.h"
 #include "triangle.h"
@@ -44,9 +45,11 @@ void RefRenderer::allocOutputImage(int width, int height) {
 void RefRenderer::clearImage() { image->clear(1.f, 1.f, 1.f, 1.f); }
 
 void RefRenderer::loadScene(SceneName name) {
+  printf("Loading scene\n");
   this->sceneName = name;
-  ::loadScene(name, image->width, image->height);
+  scene = ::loadScene(name, image->width, image->height);
   scene->serialize(numTriangles, vertices, colors);
+  printf("numTriangles: %d\n", numTriangles);
 }
 
 // advanceAnimation --
@@ -93,19 +96,26 @@ float getTriangleZ(float px, float py, float* projectedVertices) {
   float e3 = edgeFunction(px, py, projectedVertices[6], projectedVertices[7],
                           projectedVertices[0], projectedVertices[1]);
   if ((e1 >= 0 && e2 >= 0 && e3 >= 0) || (e1 <= 0 && e2 <= 0 && e3 <= 0)) {
-    return e1 * projectedVertices[8] + e2 * projectedVertices[2] +
-           e3 * projectedVertices[5];
+    float result = abs(e1 * projectedVertices[8] + e2 * projectedVertices[2] +
+                       e3 * projectedVertices[5]);
+    // printf(
+    //     "px = %f, py = %f, e1 = %f, e2 = %f, e3 = %f, projectedVertices = %f
+    //     "
+    //     "%f %f, result = %f\n",
+    //     px, py, e1, e2, e3, projectedVertices[8], projectedVertices[5],
+    //     projectedVertices[2], result);
+    return result;
   } else {
     return -1;
   }
 }
 
-void rasterization(int numPolygons, float* projectedVertices,
+void rasterization(int numTriangles, float* projectedVertices,
                    const float* vertices, const float* colors, float* outColor,
-                   int x, int y) {
-  float minZ = 1.f;
-  for (int i = 0; i < numPolygons; i++) {
-    float z = getTriangleZ(x, y, projectedVertices);
+                   float x, float y) {
+  float minZ = std::numeric_limits<float>::max();
+  for (int i = 0; i < numTriangles; i++) {
+    float z = getTriangleZ(x, y, projectedVertices + i * 9);
     if (z < 0) {
       // not in triangle
       continue;
@@ -154,18 +164,29 @@ Vector3 RefRenderer::transformVertex(const Vector3& vertex) {
   float combinedMatrix[4][4];
   scene->camera.calculateViewMatrix(combinedMatrix);
 
+  printf("Combined Matrix: \n");
+
+  for (int i = 0; i < 4; ++i) {
+    printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
+           combinedMatrix[i][2], combinedMatrix[i][3]);
+  }
+
   float vec4[4] = {vertex.x, vertex.y, vertex.z, 1.0f};
 
   float clipSpaceVertex[4];
   calClipSpaceVertex(clipSpaceVertex, combinedMatrix, vec4);
 
-  Vector3 vec3{vec4[0] / vec4[3], vec4[1] / vec4[3], vec4[2] / vec4[3]};
+  Vector3 vec3{clipSpaceVertex[0] / clipSpaceVertex[3],
+               clipSpaceVertex[1] / clipSpaceVertex[3],
+               clipSpaceVertex[2] / clipSpaceVertex[3]};
 
   return Vector3((vec3.x + 1.0) / 2.0, (vec3.y + 1.0) / 2.0, vec3.z);
 }
 
 void RefRenderer::render() {
   float* projectedVertices = new float[numTriangles * 3 * 3];
+
+  printf("Rendering...\n");
 
   for (int i = 0; i < numTriangles; ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -177,6 +198,15 @@ void RefRenderer::render() {
       projectedVertices[i * 9 + j * 3 + 2] = vec.z;
     }
   }
+  for (int i = 0; i < numTriangles * 9; ++i) {
+    if (i != 0 && i % 9 == 0) {
+      printf("\n");
+    }
+    printf("%f ", projectedVertices[i]);
+  }
+  printf("\n");
+
+  printf("Rasterizing...\n");
 
   for (int x = 0; x < image->width; x++) {
     for (int y = 0; y < image->height; y++) {

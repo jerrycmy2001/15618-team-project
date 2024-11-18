@@ -1,6 +1,7 @@
 #include "camera.h"
 
 #include <cmath>
+#include <cstdio>
 
 #include "Vector3.h"
 
@@ -49,25 +50,25 @@ void initModelMatrix(float matrix[4][4]) {
 // Initialize the camera matrix
 void Camera::initCameraMatrix(float result[4][4]) const {
   Vector3 zaxis = direction;                    // Forward
-  Vector3 xaxis = up.cross(zaxis).normalize();  // Right
+  Vector3 xaxis = zaxis.cross(up).normalize();  // Right
   Vector3 yaxis = zaxis.cross(xaxis);           // Up
 
   result[0][0] = xaxis.x;
   result[0][1] = yaxis.x;
   result[0][2] = zaxis.x;
-  result[0][3] = 0;
+  result[0][3] = -xaxis.dot(position);
   result[1][0] = xaxis.y;
   result[1][1] = yaxis.y;
   result[1][2] = zaxis.y;
-  result[1][3] = 0;
+  result[1][3] = -yaxis.dot(position);
   result[2][0] = xaxis.z;
   result[2][1] = yaxis.z;
   result[2][2] = zaxis.z;
-  result[2][3] = 0;
-  result[3][0] = -xaxis.dot(position);
-  result[3][1] = -yaxis.dot(position);
-  result[3][2] = -zaxis.dot(position);
-  result[3][3] = 1;
+  result[2][3] = -zaxis.dot(position);
+  result[3][0] = 0;
+  result[3][1] = 0;
+  result[3][2] = 0;
+  result[3][3] = -1;
 }
 
 // Initialize projection matrix
@@ -100,11 +101,23 @@ void Camera::calculateViewMatrix(float matrix[4][4]) const {
 
   float cameraMatrix[4][4];
   initCameraMatrix(cameraMatrix);
+  printf("Camera Matrix: \n");
+  for (int i = 0; i < 4; ++i) {
+    printf("%f, %f, %f, %f\n", cameraMatrix[i][0], cameraMatrix[i][1],
+           cameraMatrix[i][2], cameraMatrix[i][3]);
+  }
 
   float projectionMatrix[4][4];
   initProjectionMatrix(projectionMatrix);
+  printf("Projection Matrix: \n");
+  for (int i = 0; i < 4; ++i) {
+    printf("%f, %f, %f, %f\n", projectionMatrix[i][0], projectionMatrix[i][1],
+           projectionMatrix[i][2], projectionMatrix[i][3]);
+  }
 
   float tmp[4][4];
-  multiplyMatrices(tmp, modelMatrix, cameraMatrix);
-  multiplyMatrices(matrix, tmp, projectionMatrix);
+  // multiplyMatrices(tmp, modelMatrix, cameraMatrix);
+  // multiplyMatrices(matrix, tmp, projectionMatrix);
+  multiplyMatrices(tmp, projectionMatrix, cameraMatrix);
+  multiplyMatrices(matrix, tmp, modelMatrix);
 }
