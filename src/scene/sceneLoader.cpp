@@ -40,8 +40,8 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
               Triangle({Vector3(0.5, 0, -1), Vector3(1.5, 0, -1),
                         Vector3(1, sqrt(3) / 2.f, -1)},
                        {0, 255, 0, 1})};
-      cam = Camera({0.5, (float)sqrt(3) / 4.f, 5}, {1, 2, -1}, {0, 1, 0}, 90.0f,
-                   1.0f, 10.0f, windowWidth, windowHeight);
+      cam = Camera({0.5, (float)sqrt(3) / 4.f, 2}, {0.2, 0.2, -1}, {0, 1, 0},
+                   90.0f, 1.0f, 10.0f, windowWidth, windowHeight);
       break;
     default:
       fprintf(stderr, "Error: cann't load scene (unknown scene)\n");
