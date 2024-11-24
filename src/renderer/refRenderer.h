@@ -32,7 +32,7 @@ class RefRenderer : public Renderer {
 
   Triangle* initializePolygons();
 
-  Vector3 transformVertex(const Vector3& vertex);
+  Vector3 transformVertex(const Vector3& vertex, float combinedMatrix[4][4]);
 };
 
 #endif

@@ -99,6 +99,7 @@ void handleKeyPress(unsigned char key, int x, int y) {
 //
 // At the reall work is done here, not in the display handler
 void renderPicture() {
+  printf("renderPicture\n");
   double startTime = CycleTimer::currentSeconds();
 
   // clear screen
@@ -107,7 +108,9 @@ void renderPicture() {
   double endClearTime = CycleTimer::currentSeconds();
 
   // update particle positions and state
+
   if (gDisplay.updateSim) {
+    printf("advanceAnimation\n");
     gDisplay.renderer->advanceAnimation();
   }
   if (gDisplay.pauseSim) gDisplay.updateSim = false;

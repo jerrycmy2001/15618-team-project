@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <string>
 #define _USE_MATH_DEFINES
+#include <cfloat>
 #include <math.h>
 #include <stdio.h>
 #include <vector>
@@ -44,13 +45,15 @@ struct GlobalConstants {
 
   SceneName sceneName;
 
-  int numPolygons;
+  int numTriangles;
   float *vertices;
   float *colors;
 
   int imageWidth;
   int imageHeight;
   float *imageData;
+
+  float combinedMatrix[4][4];
 };
 
 // Global variable that is in scope, but read-only, for all cuda
@@ -211,8 +214,102 @@ __device__ __inline__ int circleInBox(float circleX, float circleY,
   }
 }
 
+static __device__ void transformVertex(float *vertex, float *projectedVertex,
+                                       float combinedMatrix[4][4]) {
+  float vec4[4] = {vertex[0], vertex[1], vertex[2], 1.0f};
+
+  float clipSpaceVertex[4];
+  for (int i = 0; i < 4; ++i) {
+    clipSpaceVertex[i] =
+        combinedMatrix[i][0] * vec4[0] + combinedMatrix[i][1] * vec4[1] +
+        combinedMatrix[i][2] * vec4[2] + combinedMatrix[i][3] * vec4[3];
+  }
+  projectedVertex[0] = (clipSpaceVertex[0] / clipSpaceVertex[3] + 1.0) / 2.0;
+  projectedVertex[1] = (clipSpaceVertex[1] / clipSpaceVertex[3] + 1.0) / 2.0;
+  projectedVertex[2] = clipSpaceVertex[2] / clipSpaceVertex[3];
+}
+
+static __device__ float getTriangleZ(float px, float py,
+                                     float *projectedVertices) {
+  float x1 = projectedVertices[0];
+  float y1 = projectedVertices[1];
+  float x2 = projectedVertices[3];
+  float y2 = projectedVertices[4];
+  float x3 = projectedVertices[6];
+  float y3 = projectedVertices[7];
+  float lambda1 = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) /
+                  ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+  float lambda2 = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) /
+                  ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+  float lambda3 = 1 - lambda1 - lambda2;
+  if (lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0 && lambda1 <= 1 &&
+      lambda2 <= 1 && lambda3 <= 1) {
+    float result = lambda1 * projectedVertices[2] +
+                   lambda2 * projectedVertices[5] +
+                   lambda3 * projectedVertices[8];
+    return result;
+  } else {
+    return -1;
+  }
+}
+
+static __device__ void rasterization(int numTriangles, float *projectedVertices,
+                                     const float *vertices, const float *colors,
+                                     float *outColor, float x, float y) {
+  float minZ = FLT_MAX;
+  for (int i = 0; i < numTriangles; i++) {
+    float z = getTriangleZ(x, y, projectedVertices + i * 9);
+    if (z < 0) {
+      // not in triangle
+      continue;
+    }
+    if (z < minZ) {
+      minZ = z;
+      outColor[0] = colors[i * 4];
+      outColor[1] = colors[i * 4 + 1];
+      outColor[2] = colors[i * 4 + 2];
+      outColor[3] = colors[i * 4 + 3];
+    }
+  }
+}
+
+__global__ void kernelProjectVertices(float *combinedMatrix,
+                                      float *projectedVertices) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  __shared__ float sCombinedMatrix[4][4];
+
+  if (threadIdx.x < 16) {
+    sCombinedMatrix[threadIdx.x / 4][threadIdx.x % 4] =
+        combinedMatrix[threadIdx.x];
+  }
+
+  // project vertices
+  if (idx < cuConstRendererParams.numTriangles * 3) {
+    // printf("original vertices: %f %f %f\n",
+    //  cuConstRendererParams.vertices[3 * idx],
+    //  cuConstRendererParams.vertices[3 * idx + 1],
+    //  cuConstRendererParams.vertices[3 * idx + 2]);
+    transformVertex(&cuConstRendererParams.vertices[3 * idx],
+                    projectedVertices + idx * 3, sCombinedMatrix);
+    // printf("projectedVertices: %f %f %f\n", projectedVertices[idx * 3],
+    //        projectedVertices[idx * 3 + 1], projectedVertices[idx * 3 + 2]);
+  }
+}
+
 // render the image by pixels
-__global__ void kernelRenderPixels() {}
+__global__ void kernelRenderPixels(float *projectedVertices) {
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+  // rasterization
+  float px = (x + 0.5f) / cuConstRendererParams.imageWidth;
+  float py = (y + 0.5f) / cuConstRendererParams.imageHeight;
+  rasterization(cuConstRendererParams.numTriangles, projectedVertices,
+                cuConstRendererParams.vertices, cuConstRendererParams.colors,
+                &cuConstRendererParams
+                     .imageData[4 * (y * cuConstRendererParams.imageWidth + x)],
+                px, py);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -253,7 +350,7 @@ const Image *CudaRenderer::getImage() {
 
 void CudaRenderer::loadScene(SceneName name) {
   sceneName = name;
-  ::loadScene(sceneName, image->width, image->height);
+  scene = ::loadScene(sceneName, image->width, image->height);
   scene->serialize(numTriangles, vertices, colors);
 }
 
@@ -297,21 +394,15 @@ void CudaRenderer::setup() {
   // See the CUDA Programmer's Guide for descriptions of
   // cudaMalloc and cudaMemcpy
 
-  cudaMalloc(&cudaDeviceVertices, sizeof(float) * 3 * numTriangles);
+  cudaMalloc(&cudaDeviceVertices, sizeof(float) * 9 * numTriangles);
   cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numTriangles);
   cudaMalloc(&cudaDeviceImageData,
              sizeof(float) * 4 * image->width * image->height);
 
-  // cudaMemcpy(cudaDevicePosition, position, sizeof(float) * 3 *
-  // numberOfCircles,
-  //            cudaMemcpyHostToDevice);
-  // cudaMemcpy(cudaDeviceVelocity, velocity, sizeof(float) * 3 *
-  // numberOfCircles,
-  //            cudaMemcpyHostToDevice);
-  // cudaMemcpy(cudaDeviceColor, color, sizeof(float) * 3 * numberOfCircles,
-  //            cudaMemcpyHostToDevice);
-  // cudaMemcpy(cudaDeviceRadius, radius, sizeof(float) * numberOfCircles,
-  //            cudaMemcpyHostToDevice);
+  cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(cudaDeviceColors, colors, sizeof(float) * 4 * numTriangles,
+             cudaMemcpyHostToDevice);
 
   // Initialize parameters in constant memory.  We didn't talk about
   // constant memory in class, but the use of read-only constant
@@ -323,7 +414,7 @@ void CudaRenderer::setup() {
 
   GlobalConstants params;
   params.sceneName = sceneName;
-  params.numPolygons = numTriangles;
+  params.numTriangles = numTriangles;
   params.vertices = cudaDeviceVertices;
   params.colors = cudaDeviceColors;
   params.imageWidth = image->width;
@@ -385,27 +476,39 @@ void CudaRenderer::clearImage() {
 // Advance the simulation one time step.  Updates all circle positions
 // and velocities
 void CudaRenderer::advanceAnimation() {
-  // 256 threads per block is a healthy number
-  dim3 blockDim(1, 1);
-  dim3 gridDim(1, 1);
-
-  // only the snowflake scene has animation
-  kernelAdvanceCamera<<<gridDim, blockDim>>>();
-  cudaDeviceSynchronize();
+  scene->cameraRotator.rotateCamera(scene->camera);
 }
 
 void CudaRenderer::render() {
-  // 256 threads per block is a healthy number
-  //   dim3 blockDim(256, 1);
-  //   dim3 gridDim((numberOfCircles + blockDim.x - 1) / blockDim.x);
-  //   kernelRenderCircles<<<gridDim, blockDim>>>();
-  //   cudaDeviceSynchronize();
+  printf("Combined Matrix: \n");
+  float combinedMatrix[4][4];
+  float *deviceCombinedMatrix;
+  cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
+  scene->camera.calculateViewMatrix(combinedMatrix);
+  // for (int i = 0; i < 4; ++i) {
+  //   printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
+  //          combinedMatrix[i][2], combinedMatrix[i][3]);
+  // }
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 4; j++) {
+      cudaMemcpy(deviceCombinedMatrix + i * 4 + j, &combinedMatrix[i][j],
+                 sizeof(float), cudaMemcpyHostToDevice);
+    }
+  }
+  float *projectedVertices;
+  cudaMalloc(&projectedVertices, sizeof(float) * 3 * numTriangles);
+  dim3 blockDim(BLOCK_WIDTH * BLOCK_WIDTH);
+  dim3 gridDim(
+      ceil((double)numTriangles / (double)(BLOCK_WIDTH * BLOCK_WIDTH)));
+  kernelProjectVertices<<<gridDim, blockDim>>>(deviceCombinedMatrix,
+                                               projectedVertices);
+  cudaCheckError(cudaDeviceSynchronize());
 
   int imageWidth = image->width;
   int imageHeight = image->height;
-  dim3 blockDim(BLOCK_WIDTH, BLOCK_WIDTH);
-  dim3 gridDim(ceil((double)imageWidth / (double)BLOCK_WIDTH),
-               ceil((double)imageHeight / (double)BLOCK_WIDTH));
-  kernelRenderPixels<<<gridDim, blockDim>>>();
+  blockDim = dim3(BLOCK_WIDTH, BLOCK_WIDTH);
+  gridDim = dim3(ceil((double)imageWidth / (double)BLOCK_WIDTH),
+                 ceil((double)imageHeight / (double)BLOCK_WIDTH));
+  kernelRenderPixels<<<gridDim, blockDim>>>(projectedVertices);
   cudaCheckError(cudaDeviceSynchronize())
 }

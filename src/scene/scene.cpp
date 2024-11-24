@@ -13,6 +13,12 @@ SceneName getSceneFromName(std::string name) {
     return SceneName::NON_ORTHOGONAL_TRIANGLES;
   } else if (name == "square") {
     return SceneName::SQUARE;
+  } else if (name == "cube") {
+    return SceneName::CUBE;
+  } else if (name == "tetrahedron") {
+    return SceneName::TETRAHEDRON;
+  } else if (name == "rand") {
+    return SceneName::RAND;
   } else {
     printf("Unknown scene name: %s\n", name.c_str());
     exit(1);

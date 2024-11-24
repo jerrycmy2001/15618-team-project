@@ -35,3 +35,33 @@ class Square : public Object3D {
          const std::array<float, 4>& color);
   std::vector<Triangle> getTriangles() const override;
 };
+
+class Cube : public Object3D {
+ public:
+  std::array<Vector3, 4> vertices;  // a, b, c, d, e = b + c - a, f = b + d - a,
+                                    // g = c + d - a, h = c + f - a
+  std::array<std::array<float, 4>, 6>
+      color;  // r g b a; 0-255 for rgb, 0-1 for a
+
+  Cube(const std::array<Vector3, 4>& verts,
+       const std::array<std::array<float, 4>, 6>&
+           color);  // vertices: 0-1, 0-2, 0-3; colors: 0-1-2, 0-1-3, 0-2-3 and
+  // their opposites
+  Cube(const std::array<Vector3, 2>& verts, const Vector3& direction,
+       const std::array<std::array<float, 4>, 6>& color);
+  std::vector<Triangle> getTriangles() const override;
+};
+
+class RegularTetrahedron : public Object3D {
+ public:
+  std::array<Vector3, 4> vertices;  // a, b, c
+  std::array<std::array<float, 4>, 4>
+      color;  // r g b a; 0-255 for rgb, 0-1 for a
+
+  RegularTetrahedron(const std::array<Vector3, 4>& verts,
+                     const std::array<std::array<float, 4>, 4>& color);
+  RegularTetrahedron(const Vector3& vertexA, const Vector3& heightDirection,
+                     const Vector3& bottomDirection,
+                     const std::array<std::array<float, 4>, 4>& color);
+  std::vector<Triangle> getTriangles() const override;
+};

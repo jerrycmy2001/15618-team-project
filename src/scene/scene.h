@@ -11,6 +11,9 @@ typedef enum {
   DOUBLE_OVERLAPPING_TRIANGLES,
   NON_ORTHOGONAL_TRIANGLES,
   SQUARE,
+  CUBE,
+  TETRAHEDRON,
+  RAND,
 } SceneName;
 
 SceneName getSceneFromName(std::string name);

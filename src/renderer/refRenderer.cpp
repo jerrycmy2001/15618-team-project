@@ -57,62 +57,35 @@ void RefRenderer::loadScene(SceneName name) {
 // Advance the simulation one time step. Move the camera position
 void RefRenderer::advanceAnimation() {
   // TODO: move camera
+  scene->cameraRotator.rotateCamera(scene->camera);
 }
 
-static inline void lookupColor(float coord, float& r, float& g, float& b) {
-  const int N = 5;
-
-  float lookupTable[N][3] = {
-      {1.f, 1.f, 1.f}, {1.f, 1.f, 1.f},  {.8f, .9f, 1.f},
-      {.8f, .9f, 1.f}, {.8f, 0.8f, 1.f},
-  };
-
-  float scaledCoord = coord * (N - 1);
-
-  int base = std::min(static_cast<int>(scaledCoord), N - 1);
-
-  // linearly interpolate between values in the table based on the
-  // value of coord
-  float weight = scaledCoord - static_cast<float>(base);
-  float oneMinusWeight = 1.f - weight;
-
-  r = (oneMinusWeight * lookupTable[base][0]) +
-      (weight * lookupTable[base + 1][0]);
-  g = (oneMinusWeight * lookupTable[base][1]) +
-      (weight * lookupTable[base + 1][1]);
-  b = (oneMinusWeight * lookupTable[base][2]) +
-      (weight * lookupTable[base + 1][2]);
-}
-
-float edgeFunction(float px, float py, float x1, float y1, float x2, float y2) {
-  return (py - y1) * (x2 - x1) - (px - x1) * (y2 - y1);
-}
-
-float getTriangleZ(float px, float py, float* projectedVertices) {
-  float e1 = edgeFunction(px, py, projectedVertices[0], projectedVertices[1],
-                          projectedVertices[3], projectedVertices[4]);
-  float e2 = edgeFunction(px, py, projectedVertices[3], projectedVertices[4],
-                          projectedVertices[6], projectedVertices[7]);
-  float e3 = edgeFunction(px, py, projectedVertices[6], projectedVertices[7],
-                          projectedVertices[0], projectedVertices[1]);
-  if ((e1 >= 0 && e2 >= 0 && e3 >= 0) || (e1 <= 0 && e2 <= 0 && e3 <= 0)) {
-    float result = abs(e1 * projectedVertices[8] + e2 * projectedVertices[2] +
-                       e3 * projectedVertices[5]);
-    // printf(
-    //     "px = %f, py = %f, e1 = %f, e2 = %f, e3 = %f, projectedVertices = %f
-    //     "
-    //     "%f %f, result = %f\n",
-    //     px, py, e1, e2, e3, projectedVertices[8], projectedVertices[5],
-    //     projectedVertices[2], result);
+static float getTriangleZ(float px, float py, float* projectedVertices) {
+  float x1 = projectedVertices[0];
+  float y1 = projectedVertices[1];
+  float x2 = projectedVertices[3];
+  float y2 = projectedVertices[4];
+  float x3 = projectedVertices[6];
+  float y3 = projectedVertices[7];
+  float lambda1 = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) /
+                  ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+  float lambda2 = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) /
+                  ((y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3));
+  float lambda3 = 1 - lambda1 - lambda2;
+  if (lambda1 >= 0 && lambda2 >= 0 && lambda3 >= 0 && lambda1 <= 1 &&
+      lambda2 <= 1 && lambda3 <= 1) {
+    float result = lambda1 * projectedVertices[2] +
+                   lambda2 * projectedVertices[5] +
+                   lambda3 * projectedVertices[8];
     return result;
   } else {
     return -1;
   }
 }
 
-void rasterization(int numTriangles, float* projectedVertices,
-                   const float* vertices, const float* colors, float* outColor,
-                   float x, float y) {
+static void rasterization(int numTriangles, float* projectedVertices,
+                          const float* vertices, const float* colors,
+                          float* outColor, float x, float y) {
   float minZ = std::numeric_limits<float>::max();
   for (int i = 0; i < numTriangles; i++) {
     float z = getTriangleZ(x, y, projectedVertices + i * 9);
@@ -151,8 +124,8 @@ void rasterization(int numTriangles, float* projectedVertices,
 //   return triangles;
 // }
 
-void calClipSpaceVertex(float result[4], float combinedMatrix[4][4],
-                        float vec4[4]) {
+static void calClipSpaceVertex(float result[4], float combinedMatrix[4][4],
+                               float vec4[4]) {
   for (int i = 0; i < 4; ++i) {
     result[i] = combinedMatrix[i][0] * vec4[0] +
                 combinedMatrix[i][1] * vec4[1] +
@@ -160,17 +133,8 @@ void calClipSpaceVertex(float result[4], float combinedMatrix[4][4],
   }
 }
 
-Vector3 RefRenderer::transformVertex(const Vector3& vertex) {
-  float combinedMatrix[4][4];
-  scene->camera.calculateViewMatrix(combinedMatrix);
-
-  printf("Combined Matrix: \n");
-
-  for (int i = 0; i < 4; ++i) {
-    printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
-           combinedMatrix[i][2], combinedMatrix[i][3]);
-  }
-
+Vector3 RefRenderer::transformVertex(const Vector3& vertex,
+                                     float combinedMatrix[4][4]) {
   float vec4[4] = {vertex.x, vertex.y, vertex.z, 1.0f};
 
   float clipSpaceVertex[4];
@@ -184,20 +148,38 @@ Vector3 RefRenderer::transformVertex(const Vector3& vertex) {
 }
 
 void RefRenderer::render() {
+  printf("Combined Matrix: \n");
+  float combinedMatrix[4][4];
+  scene->camera.calculateViewMatrix(combinedMatrix);
+  for (int i = 0; i < 4; ++i) {
+    printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
+           combinedMatrix[i][2], combinedMatrix[i][3]);
+  }
+
   float* projectedVertices = new float[numTriangles * 3 * 3];
 
   printf("Rendering...\n");
 
+  printf("original vertices: \n");
   for (int i = 0; i < numTriangles; ++i) {
     for (int j = 0; j < 3; ++j) {
-      Vector3 vec = transformVertex(Vector3(vertices[i * 9 + j * 3],
-                                            vertices[i * 9 + j * 3 + 1],
-                                            vertices[i * 9 + j * 3 + 2]));
+      printf("%f %f %f\n", vertices[i * 9 + j * 3], vertices[i * 9 + j * 3 + 1],
+             vertices[i * 9 + j * 3 + 2]);
+    }
+  }
+
+  for (int i = 0; i < numTriangles; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      Vector3 vec = transformVertex(
+          Vector3(vertices[i * 9 + j * 3], vertices[i * 9 + j * 3 + 1],
+                  vertices[i * 9 + j * 3 + 2]),
+          combinedMatrix);
       projectedVertices[i * 9 + j * 3] = vec.x;
       projectedVertices[i * 9 + j * 3 + 1] = vec.y;
       projectedVertices[i * 9 + j * 3 + 2] = vec.z;
     }
   }
+  printf("projected vertices: \n");
   for (int i = 0; i < numTriangles * 9; ++i) {
     if (i != 0 && i % 9 == 0) {
       printf("\n");
@@ -216,61 +198,4 @@ void RefRenderer::render() {
                     &image->data[4 * (y * image->width + x)], px, py);
     }
   }
-  // render all circles
-  // for (int circleIndex = 0; circleIndex < numberOfCircles; circleIndex++) {
-  //   int index3 = 3 * circleIndex;
-
-  //   float px = position[index3];
-  //   float py = position[index3 + 1];
-  //   float pz = position[index3 + 2];
-  //   float rad = radius[circleIndex];
-
-  //   // compute the bounding box of the circle.  This bounding box
-  //   // is in normalized coordinates
-  //   float minX = px - rad;
-  //   float maxX = px + rad;
-  //   float minY = py - rad;
-  //   float maxY = py + rad;
-
-  //   // convert normalized coordinate bounds to integer screen
-  //   // pixel bounds.  Clamp to the edges of the screen.
-  //   int screenMinX =
-  //       CLAMP(static_cast<int>(minX * image->width), 0, image->width);
-  //   int screenMaxX =
-  //       CLAMP(static_cast<int>(maxX * image->width) + 1, 0, image->width);
-  //   int screenMinY =
-  //       CLAMP(static_cast<int>(minY * image->height), 0, image->height);
-  //   int screenMaxY =
-  //       CLAMP(static_cast<int>(maxY * image->height) + 1, 0, image->height);
-
-  //   float invWidth = 1.f / image->width;
-  //   float invHeight = 1.f / image->height;
-
-  //   // for each pixel in the bounding box, determine the circle's
-  //   // contribution to the pixel.  The contribution is computed in
-  //   // the function shadePixel.  Since the circle does not fill
-  //   // the bounding box entirely, not every pixel in the box will
-  //   // receive contribution.
-  //   for (int pixelY = screenMinY; pixelY < screenMaxY; pixelY++) {
-  //     // pointer to pixel data
-  //     float* imgPtr = &image->data[4 * (pixelY * image->width + screenMinX)];
-
-  //     for (int pixelX = screenMinX; pixelX < screenMaxX; pixelX++) {
-  //       // When "shading" the pixel ("shading" = computing the
-  //       // circle's color and opacity at the pixel), we treat
-  //       // the pixel as a point at the center of the pixel.
-  //       // We'll compute the color of the circle at this
-  //       // point.  Note that shading math will occur in the
-  //       // normalized [0,1]^2 coordinate space, so we convert
-  //       // the pixel center into this coordinate space prior
-  //       // to calling shadePixel.
-  //       float pixelCenterNormX = invWidth * (static_cast<float>(pixelX) +
-  //       0.5f); float pixelCenterNormY =
-  //           invHeight * (static_cast<float>(pixelY) + 0.5f);
-  //       shadePixel(pixelCenterNormX, pixelCenterNormY, px, py, pz, imgPtr,
-  //                  circleIndex);
-  //       imgPtr += 4;
-  //     }
-  //   }
-  // }
 }

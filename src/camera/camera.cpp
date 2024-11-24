@@ -101,23 +101,22 @@ void Camera::calculateViewMatrix(float matrix[4][4]) const {
 
   float cameraMatrix[4][4];
   initCameraMatrix(cameraMatrix);
-  printf("Camera Matrix: \n");
-  for (int i = 0; i < 4; ++i) {
-    printf("%f, %f, %f, %f\n", cameraMatrix[i][0], cameraMatrix[i][1],
-           cameraMatrix[i][2], cameraMatrix[i][3]);
-  }
+  // printf("Camera Matrix: \n");
+  // for (int i = 0; i < 4; ++i) {
+  //   printf("%f, %f, %f, %f\n", cameraMatrix[i][0], cameraMatrix[i][1],
+  //          cameraMatrix[i][2], cameraMatrix[i][3]);
+  // }
 
   float projectionMatrix[4][4];
   initProjectionMatrix(projectionMatrix);
-  printf("Projection Matrix: \n");
-  for (int i = 0; i < 4; ++i) {
-    printf("%f, %f, %f, %f\n", projectionMatrix[i][0], projectionMatrix[i][1],
-           projectionMatrix[i][2], projectionMatrix[i][3]);
-  }
+  // printf("Projection Matrix: \n");
+  // for (int i = 0; i < 4; ++i) {
+  //   printf("%f, %f, %f, %f\n", projectionMatrix[i][0],
+  //   projectionMatrix[i][1],
+  //          projectionMatrix[i][2], projectionMatrix[i][3]);
+  // }
 
   float tmp[4][4];
-  // multiplyMatrices(tmp, modelMatrix, cameraMatrix);
-  // multiplyMatrices(matrix, tmp, projectionMatrix);
   multiplyMatrices(tmp, projectionMatrix, cameraMatrix);
   multiplyMatrices(matrix, tmp, modelMatrix);
 }

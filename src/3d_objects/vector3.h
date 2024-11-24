@@ -15,10 +15,15 @@ class Vector3 {
 
   Vector3 operator+(const Vector3& v) const;
   Vector3 operator-(const Vector3& v) const;
+  Vector3 operator*(float s) const;
+  Vector3 operator/(float s) const;
 
+  float magnitude() const;
   Vector3 normalize() const;
   Vector3 cross(const Vector3& v) const;
   float dot(const Vector3& v) const;
+  float length() const;
+  bool isZero() const;
 };
 
 #endif

@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "Vector3.h"
 #include "camera.h"
 
@@ -6,6 +8,7 @@ class CameraRotator {
   Vector3 axisCenter;
   Vector3 axisDirection;
   float angleSpeed;
+  bool shouldRotate;
 
  public:
   CameraRotator();

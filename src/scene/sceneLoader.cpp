@@ -31,8 +31,10 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
               new Triangle({Vector3(0.5, 0, -1), Vector3(1.5, 0, -1),
                             Vector3(1, sqrt(3) / 2.f, -1)},
                            {0, 255, 0, 1})};
-      cam = Camera({0.5, (float)sqrt(3) / 4.f, 2}, {0, 0, -1}, {0, 1, 0}, 90.0f,
+      cam = Camera({0.5, (float)sqrt(3) / 4.f, 4}, {0, 0, -1}, {0, 1, 0}, 90.0f,
                    1.0f, 10.0f, windowWidth, windowHeight);
+      camRotator =
+          CameraRotator({0.5, (float)sqrt(3) / 4.f, 0}, {0, 1, 0}, 0.1f);
       break;
     case SceneName::NON_ORTHOGONAL_TRIANGLES:
       objs = {new Triangle({Vector3(0, 0, 0), Vector3(1, 0, 0),
@@ -49,6 +51,44 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
                          {255, 0, 0, 1})};
       cam = Camera({0.5, 0.5, 2}, {0, 0, -1}, {0, 1, 0}, 90.0f, 1.0f, 10.0f,
                    windowWidth, windowHeight);
+      break;
+    case SceneName::CUBE:
+      objs = {new Cube({Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(0, 1, 0),
+                        Vector3(0, 1, 1)},
+                       {{{255, 0, 0, 1},
+                         {0, 255, 0, 1},
+                         {0, 0, 255, 1},
+                         {255, 0, 0, 1},
+                         {0, 255, 0, 1},
+                         {0, 0, 255, 1}}})};
+      cam = Camera({2, 2, 2}, {-1, -1, -1}, {0, 0, 1}, 90.0f, 1.0f, 10.0f,
+                   windowWidth, windowHeight);
+      break;
+    case SceneName::TETRAHEDRON:
+      objs = {
+          new RegularTetrahedron(
+              {
+                  {Vector3(0, 0, 0), Vector3(1, 0, 0),
+                   Vector3(0.5, std::sqrt(3) / 2.0, 0),
+                   Vector3(0.5, std::sqrt(3) / 2.0, std::sqrt(2))},
+              },
+              {{{255, 0, 0, 1},
+                {0, 255, 0, 1},
+                {0, 0, 255, 1},
+                {50, 50, 155, 1}}}),
+          // new RegularTetrahedron(Vector3(2, 2, 2), Vector3(0, 0, -2),
+          //                        Vector3(1, 0, 0),
+          //                        {{{255, 0, 0, 1},
+          //                          {0, 255, 0, 1},
+          //                          {0, 0, 255, 1},
+          //                          {0, 0, 255, 1}}}),
+      };
+      cam = Camera({4, 4, 2}, {-1, -1, -1}, {0, 0, 1}, 90.0f, 1.0f, 10.0f,
+                   windowWidth, windowHeight);
+      camRotator =
+          CameraRotator({0.5, (float)sqrt(3) / 4.f, 0}, {0, 1, 0}, 0.1f);
+      break;
+    case SceneName::RAND:
       break;
     default:
       fprintf(stderr, "Error: can't load scene (unknown scene)\n");
