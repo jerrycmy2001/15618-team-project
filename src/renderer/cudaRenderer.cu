@@ -289,12 +289,12 @@ __global__ void kernelProjectVertices(float *combinedMatrix,
   if (idx < cuConstRendererParams.numTriangles * 3) {
     transformVertex(&cuConstRendererParams.vertices[3 * idx],
                     projectedVertices + idx * 3, sCombinedMatrix);
-    printf("original vertices: %f %f %f\n",
-           cuConstRendererParams.vertices[3 * idx],
-           cuConstRendererParams.vertices[3 * idx + 1],
-           cuConstRendererParams.vertices[3 * idx + 2]);
-    printf("projectedVertices: %f %f %f\n", projectedVertices[idx * 3],
-           projectedVertices[idx * 3 + 1], projectedVertices[idx * 3 + 2]);
+    // printf("original vertices: %f %f %f\n",
+    //        cuConstRendererParams.vertices[3 * idx],
+    //        cuConstRendererParams.vertices[3 * idx + 1],
+    //        cuConstRendererParams.vertices[3 * idx + 2]);
+    // printf("projectedVertices: %f %f %f\n", projectedVertices[idx * 3],
+    //        projectedVertices[idx * 3 + 1], projectedVertices[idx * 3 + 2]);
   }
 }
 

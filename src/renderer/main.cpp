@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
   printf("Rendering to %dx%d image\n", imageSize, imageSize);
 
   Renderer* renderer;
+  srand(time(NULL));
 
   if (checkCorrectness) {
     // Need both the renderers

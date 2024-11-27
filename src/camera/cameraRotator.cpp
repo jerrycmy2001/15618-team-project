@@ -15,7 +15,6 @@ CameraRotator::CameraRotator(const Vector3& axisCenter,
 CameraRotator::CameraRotator(float min, float max) {
   float range = max - min;
   // Center
-  srand(static_cast<unsigned int>(time(NULL)));  // Seed the random generator
 
   float center_x = static_cast<float>(rand()) / RAND_MAX * range + min;
   float center_y = static_cast<float>(rand()) / RAND_MAX * range + min;
@@ -92,4 +91,7 @@ void CameraRotator::rotateCamera(Camera& cam) const {
 
   // Update camera
   cam.updateStatus(rotatedPos, rotatedDir, rotatedUp);
+
+  printf("rotatedPos: %f, %f, %f\n", cam.position.x, cam.position.y,
+         cam.position.z);
 }

@@ -17,9 +17,9 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
   std::vector<Object3D*> objs;
   Camera cam;
   CameraRotator camRotator;
-  int object_num = 8;
   float min_range = 0.0f;
   float max_range = 100.0f;
+  float stride = 20.0f;
   std::vector<std::vector<Object3D*>> chars;
   switch (sceneName) {
     case SceneName::SINGLE_TRIANGLE:
@@ -92,27 +92,27 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
       camRotator = CameraRotator({0, 0, 0}, {0, 0, 1}, 0.04f);
       break;
     case SceneName::RAND:
-      for (float x = min_range; x < max_range; x += 500.0f)
-        for (float y = min_range; y < max_range; y += 500.0f)
-          for (float z = min_range; z < max_range; z += 500.0f) {
-            srand(time(nullptr));
-            for (int i = 0; i < object_num; ++i) {
-              if (rand() % 2 == 0) {
-                printf("Get a tetrahedron\n");
-                objs.push_back(new RegularTetrahedron(
-                    x, x + 500.0f, y, y + 500.0f, z, z + 500.0f));
-              } else {
-                printf("Get a cube\n");
-                objs.push_back(
-                    new Cube(x, x + 500.0f, y, y + 500.0f, z, z + 500.0f));
-              }
+      srand(time(NULL));
+      for (float x = min_range; x < max_range; x += stride)
+        for (float y = min_range; y < max_range; y += stride)
+          for (float z = min_range; z < max_range; z += stride) {
+            // for (int i = 0; i < object_num; ++i) {
+            if (rand() % 2 == 0) {
+              printf("Get a tetrahedron\n");
+              objs.push_back(new RegularTetrahedron(x, x + stride, y,
+                                                    y + stride, z, z + stride));
+            } else {
+              printf("Get a cube\n");
+              objs.push_back(
+                  new Cube(x, x + stride, y, y + stride, z, z + stride));
             }
+            // }
           }
       printf("objs size is %ld\n", objs.size());
 
       // cam = Camera(min_range, max_range, windowWidth, windowHeight);
       // camRotator = CameraRotator(min_range, max_range);
-      cam = Camera({-5, -5, -5}, {50, 50, 50}, {0, 0, 1}, 90.0f, 0.01f, 110.0f,
+      cam = Camera({-100, 0, 50}, {1, 0, 0}, {0, 0, 1}, 90.0f, 0.01f, 100000.0f,
                    windowWidth, windowHeight);
       camRotator = CameraRotator({50, 50, 50}, {0, 0, 1}, 0.04f);
       break;

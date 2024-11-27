@@ -20,7 +20,6 @@ Camera::Camera(const Vector3& pos, const Vector3& dir, const Vector3& up,
 
 Camera::Camera(float min, float max, int w, int h) {
   float range = max - min;
-  srand(static_cast<unsigned int>(time(NULL)));  // Seed the random generator
 
   // Position
   float pos_x = static_cast<float>(rand()) / RAND_MAX * range + min;

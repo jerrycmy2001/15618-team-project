@@ -57,11 +57,10 @@ Cube::Cube(const std::array<Vector3, 2>& verts, const Vector3& direction,
 
   newVerts[3] = verts[0] + scaledPerpendicularForV3;
 
-  Cube(newVerts, color);
+  *this = Cube(newVerts, color);
 }
 
 std::array<float, 4> getRandomColor() {
-  srand(static_cast<unsigned int>(time(NULL)));
   return {static_cast<float>(rand()) / RAND_MAX,
           static_cast<float>(rand()) / RAND_MAX,
           static_cast<float>(rand()) / RAND_MAX,
@@ -76,7 +75,6 @@ Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
   float x_range = x_max - x_min;
   float y_range = y_max - y_min;
   float z_range = z_max - z_min;
-  srand(static_cast<unsigned int>(time(NULL)));  // Seed the random generator
 
   // Vertex
   float first_x = static_cast<float>(rand()) / RAND_MAX + (x_mid - 0.5f);
@@ -91,7 +89,8 @@ Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
   Vector3 sdir = Vector3(sdir_x, sdir_y, sdir_z).normalize();
 
   float edge_length =
-      static_cast<float>(rand()) / RAND_MAX * (x_mid - 0.5f - x_min);
+      static_cast<float>(rand()) / RAND_MAX * (x_mid - 0.5f - x_min - 1.0f) +
+      1.0f;
   Vector3 second = first + (sdir * edge_length);
 
   // Direction
@@ -100,15 +99,15 @@ Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
   float dir_z = static_cast<float>(rand()) / RAND_MAX * z_range;
   Vector3 dir = Vector3(dir_x, dir_y, dir_z);
 
-  Cube({first, second}, dir,
-       {
-           getRandomColor(),
-           getRandomColor(),
-           getRandomColor(),
-           getRandomColor(),
-           getRandomColor(),
-           getRandomColor(),
-       });
+  *this = Cube({first, second}, dir,
+               {
+                   getRandomColor(),
+                   getRandomColor(),
+                   getRandomColor(),
+                   getRandomColor(),
+                   getRandomColor(),
+                   getRandomColor(),
+               });
 }
 
 std::vector<Triangle> Cube::getTriangles() const {
@@ -158,7 +157,6 @@ RegularTetrahedron::RegularTetrahedron(float x_min, float x_max, float y_min,
   float x_range = x_max - x_min;
   float y_range = y_max - y_min;
   float z_range = z_max - z_min;
-  srand(static_cast<unsigned int>(time(NULL)));  // Seed the random generator
 
   // Vertex A
   float A_x = static_cast<float>(rand()) / RAND_MAX + (x_mid - 0.5f);
@@ -167,7 +165,8 @@ RegularTetrahedron::RegularTetrahedron(float x_min, float x_max, float y_min,
   Vector3 A = Vector3(A_x, A_y, A_z);
 
   float edge_length =
-      static_cast<float>(rand()) / RAND_MAX * (x_mid - 0.5f - x_min);
+      static_cast<float>(rand()) / RAND_MAX * (x_mid - 0.5f - x_min - 1.0f) +
+      1.0f;
 
   // Direction
   float hdir_x = static_cast<float>(rand()) / RAND_MAX * x_range;
@@ -184,7 +183,7 @@ RegularTetrahedron::RegularTetrahedron(float x_min, float x_max, float y_min,
     bdir = Vector3(bdir_x, bdir_y, bdir_z);
   }
 
-  RegularTetrahedron(
+  *this = RegularTetrahedron(
       A, edge_length, hdir, bdir,
       {getRandomColor(), getRandomColor(), getRandomColor(), getRandomColor()});
 }
