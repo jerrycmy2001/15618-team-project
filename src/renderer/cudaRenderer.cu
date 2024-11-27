@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <string>
 #define _USE_MATH_DEFINES
 #include <cfloat>
@@ -282,17 +283,18 @@ __global__ void kernelProjectVertices(float *combinedMatrix,
     sCombinedMatrix[threadIdx.x / 4][threadIdx.x % 4] =
         combinedMatrix[threadIdx.x];
   }
+  __syncthreads();
 
   // project vertices
   if (idx < cuConstRendererParams.numTriangles * 3) {
-    // printf("original vertices: %f %f %f\n",
-    //  cuConstRendererParams.vertices[3 * idx],
-    //  cuConstRendererParams.vertices[3 * idx + 1],
-    //  cuConstRendererParams.vertices[3 * idx + 2]);
     transformVertex(&cuConstRendererParams.vertices[3 * idx],
                     projectedVertices + idx * 3, sCombinedMatrix);
-    // printf("projectedVertices: %f %f %f\n", projectedVertices[idx * 3],
-    //        projectedVertices[idx * 3 + 1], projectedVertices[idx * 3 + 2]);
+    printf("original vertices: %f %f %f\n",
+           cuConstRendererParams.vertices[3 * idx],
+           cuConstRendererParams.vertices[3 * idx + 1],
+           cuConstRendererParams.vertices[3 * idx + 2]);
+    printf("projectedVertices: %f %f %f\n", projectedVertices[idx * 3],
+           projectedVertices[idx * 3 + 1], projectedVertices[idx * 3 + 2]);
   }
 }
 
@@ -398,6 +400,7 @@ void CudaRenderer::setup() {
   cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numTriangles);
   cudaMalloc(&cudaDeviceImageData,
              sizeof(float) * 4 * image->width * image->height);
+  cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
 
   cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
              cudaMemcpyHostToDevice);
@@ -480,11 +483,9 @@ void CudaRenderer::advanceAnimation() {
 }
 
 void CudaRenderer::render() {
-  printf("Combined Matrix: \n");
   float combinedMatrix[4][4];
-  float *deviceCombinedMatrix;
-  cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
   scene->camera.calculateViewMatrix(combinedMatrix);
+  // printf("Combined Matrix: \n");
   // for (int i = 0; i < 4; ++i) {
   //   printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
   //          combinedMatrix[i][2], combinedMatrix[i][3]);
@@ -510,5 +511,5 @@ void CudaRenderer::render() {
   gridDim = dim3(ceil((double)imageWidth / (double)BLOCK_WIDTH),
                  ceil((double)imageHeight / (double)BLOCK_WIDTH));
   kernelRenderPixels<<<gridDim, blockDim>>>(projectedVertices);
-  cudaCheckError(cudaDeviceSynchronize())
+  cudaCheckError(cudaDeviceSynchronize());
 }

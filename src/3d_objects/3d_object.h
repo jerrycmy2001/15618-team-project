@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <ctime>
 #include <vector>
 
 #include "Vector3.h"
@@ -49,6 +50,8 @@ class Cube : public Object3D {
   // their opposites
   Cube(const std::array<Vector3, 2>& verts, const Vector3& direction,
        const std::array<std::array<float, 4>, 6>& color);
+  Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
+       float z_max);
   std::vector<Triangle> getTriangles() const override;
 };
 
@@ -60,8 +63,11 @@ class RegularTetrahedron : public Object3D {
 
   RegularTetrahedron(const std::array<Vector3, 4>& verts,
                      const std::array<std::array<float, 4>, 4>& color);
-  RegularTetrahedron(const Vector3& vertexA, const Vector3& heightDirection,
+  RegularTetrahedron(const Vector3& vertexA, float edgeLength,
+                     const Vector3& heightDirection,
                      const Vector3& bottomDirection,
                      const std::array<std::array<float, 4>, 4>& color);
+  RegularTetrahedron(float x_min, float x_max, float y_min, float y_max,
+                     float z_min, float z_max);
   std::vector<Triangle> getTriangles() const override;
 };

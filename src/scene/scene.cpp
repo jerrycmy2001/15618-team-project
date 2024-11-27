@@ -19,6 +19,8 @@ SceneName getSceneFromName(std::string name) {
     return SceneName::TETRAHEDRON;
   } else if (name == "rand") {
     return SceneName::RAND;
+  } else if (name == "title") {
+    return SceneName::COURSE_TITLE;
   } else {
     printf("Unknown scene name: %s\n", name.c_str());
     exit(1);

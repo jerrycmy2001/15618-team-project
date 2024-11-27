@@ -14,6 +14,7 @@ class CameraRotator {
   CameraRotator();
   CameraRotator(const Vector3& axisCenter, const Vector3& axisDirection,
                 float angleSpeed);
+  CameraRotator(float min, float max);
   CameraRotator(const CameraRotator& c) = default;
   CameraRotator& operator=(const CameraRotator& c) = default;
 

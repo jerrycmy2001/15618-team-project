@@ -12,6 +12,27 @@ CameraRotator::CameraRotator(const Vector3& axisCenter,
       angleSpeed(angleSpeed),
       shouldRotate(true) {}
 
+CameraRotator::CameraRotator(float min, float max) {
+  float range = max - min;
+  // Center
+  srand(static_cast<unsigned int>(time(NULL)));  // Seed the random generator
+
+  float center_x = static_cast<float>(rand()) / RAND_MAX * range + min;
+  float center_y = static_cast<float>(rand()) / RAND_MAX * range + min;
+  float center_z = static_cast<float>(rand()) / RAND_MAX * range + min;
+  Vector3 center = Vector3(center_x, center_y, center_z);
+
+  // Direction
+  float dir_x = static_cast<float>(rand()) / RAND_MAX * range;
+  float dir_y = static_cast<float>(rand()) / RAND_MAX * range;
+  float dir_z = static_cast<float>(rand()) / RAND_MAX * range;
+  Vector3 dir = Vector3(dir_x, dir_y, dir_z);
+
+  float speed = static_cast<float>(rand()) / RAND_MAX * 0.05f;
+
+  CameraRotator(center, dir, speed);
+}
+
 void CameraRotator::rotateCamera(Camera& cam) const {
   if (!shouldRotate) {
     return;

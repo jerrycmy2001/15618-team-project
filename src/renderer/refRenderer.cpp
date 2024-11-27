@@ -148,25 +148,26 @@ Vector3 RefRenderer::transformVertex(const Vector3& vertex,
 }
 
 void RefRenderer::render() {
-  printf("Combined Matrix: \n");
   float combinedMatrix[4][4];
   scene->camera.calculateViewMatrix(combinedMatrix);
-  for (int i = 0; i < 4; ++i) {
-    printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
-           combinedMatrix[i][2], combinedMatrix[i][3]);
-  }
+  // printf("Combined Matrix: \n");
+  // for (int i = 0; i < 4; ++i) {
+  //   printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
+  //          combinedMatrix[i][2], combinedMatrix[i][3]);
+  // }
 
   float* projectedVertices = new float[numTriangles * 3 * 3];
 
   printf("Rendering...\n");
 
-  printf("original vertices: \n");
-  for (int i = 0; i < numTriangles; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      printf("%f %f %f\n", vertices[i * 9 + j * 3], vertices[i * 9 + j * 3 + 1],
-             vertices[i * 9 + j * 3 + 2]);
-    }
-  }
+  // printf("original vertices: \n");
+  // for (int i = 0; i < numTriangles; ++i) {
+  //   for (int j = 0; j < 3; ++j) {
+  //     printf("%f %f %f\n", vertices[i * 9 + j * 3], vertices[i * 9 + j * 3 +
+  //     1],
+  //            vertices[i * 9 + j * 3 + 2]);
+  //   }
+  // }
 
   for (int i = 0; i < numTriangles; ++i) {
     for (int j = 0; j < 3; ++j) {
@@ -179,14 +180,14 @@ void RefRenderer::render() {
       projectedVertices[i * 9 + j * 3 + 2] = vec.z;
     }
   }
-  printf("projected vertices: \n");
-  for (int i = 0; i < numTriangles * 9; ++i) {
-    if (i != 0 && i % 9 == 0) {
-      printf("\n");
-    }
-    printf("%f ", projectedVertices[i]);
-  }
-  printf("\n");
+  // printf("projected vertices: \n");
+  // for (int i = 0; i < numTriangles * 9; ++i) {
+  //   if (i != 0 && i % 9 == 0) {
+  //     printf("\n");
+  //   }
+  //   printf("%f ", projectedVertices[i]);
+  // }
+  // printf("\n");
 
   printf("Rasterizing...\n");
 

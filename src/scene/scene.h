@@ -14,6 +14,7 @@ typedef enum {
   CUBE,
   TETRAHEDRON,
   RAND,
+  COURSE_TITLE,
 } SceneName;
 
 SceneName getSceneFromName(std::string name);

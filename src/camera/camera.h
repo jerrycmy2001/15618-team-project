@@ -1,6 +1,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <random>
+
 #include "vector3.h"
 
 class Camera {
@@ -17,6 +19,7 @@ class Camera {
   Camera();
   Camera(const Vector3& pos, const Vector3& dir, const Vector3& up, float fov,
          float close, float far, int w, int h);
+  Camera(float min, float max, int w, int h);  // Randomly generate a camera
   Camera(const Camera& c) = default;
   Camera& operator=(const Camera& c) = default;
 
