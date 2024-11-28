@@ -17,6 +17,7 @@ class Vector3 {
   Vector3 operator-(const Vector3& v) const;
   Vector3 operator*(float s) const;
   Vector3 operator/(float s) const;
+  bool operator==(const Vector3& v) const;
 
   float magnitude() const;
   Vector3 normalize() const;

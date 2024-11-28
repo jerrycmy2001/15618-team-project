@@ -144,7 +144,7 @@ void startRendererWithDisplay(Renderer* renderer) {
 
   glutInitWindowSize(gDisplay.width, gDisplay.height);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-  glutCreateWindow("CMU 15-418 Assignment 2 - Circle Renderer");
+  glutCreateWindow("3D Object Renderer");
   glutDisplayFunc(handleDisplay);
   glutKeyboardFunc(handleKeyPress);
   glutMainLoop();

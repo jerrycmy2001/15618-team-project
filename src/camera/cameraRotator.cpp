@@ -92,6 +92,6 @@ void CameraRotator::rotateCamera(Camera& cam) const {
   // Update camera
   cam.updateStatus(rotatedPos, rotatedDir, rotatedUp);
 
-  printf("rotatedPos: %f, %f, %f\n", cam.position.x, cam.position.y,
-         cam.position.z);
+  // printf("rotatedPos: %f, %f, %f\n", cam.position.x, cam.position.y,
+  //        cam.position.z);
 }

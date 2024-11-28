@@ -1,8 +1,11 @@
 #include "3d_object.h"
 
 #include <cmath>
+#include <cstdio>
 
 #include "Vector3.h"
+
+float getRandFloat01() { return (float)rand() / (float)RAND_MAX; }
 
 Triangle::Triangle() {}
 
@@ -61,10 +64,8 @@ Cube::Cube(const std::array<Vector3, 2>& verts, const Vector3& direction,
 }
 
 std::array<float, 4> getRandomColor() {
-  return {static_cast<float>(rand()) / RAND_MAX,
-          static_cast<float>(rand()) / RAND_MAX,
-          static_cast<float>(rand()) / RAND_MAX,
-          static_cast<float>(rand()) / RAND_MAX};
+  return {getRandFloat01(), getRandFloat01(), getRandFloat01(),
+          getRandFloat01()};
 }
 
 Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
@@ -77,26 +78,24 @@ Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
   float z_range = z_max - z_min;
 
   // Vertex
-  float first_x = static_cast<float>(rand()) / RAND_MAX + (x_mid - 0.5f);
-  float first_y = static_cast<float>(rand()) / RAND_MAX + (y_mid - 0.5f);
-  float first_z = static_cast<float>(rand()) / RAND_MAX + (z_mid - 0.5f);
+  float first_x = getRandFloat01() + (x_mid - 0.5f);
+  float first_y = getRandFloat01() + (y_mid - 0.5f);
+  float first_z = getRandFloat01() + (z_mid - 0.5f);
   Vector3 first = Vector3(first_x, first_y, first_z);
 
   // Second vertex
-  float sdir_x = static_cast<float>(rand()) / RAND_MAX * x_range;
-  float sdir_y = static_cast<float>(rand()) / RAND_MAX * y_range;
-  float sdir_z = static_cast<float>(rand()) / RAND_MAX * z_range;
+  float sdir_x = getRandFloat01() * x_range;
+  float sdir_y = getRandFloat01() * y_range;
+  float sdir_z = getRandFloat01() * z_range;
   Vector3 sdir = Vector3(sdir_x, sdir_y, sdir_z).normalize();
 
-  float edge_length =
-      static_cast<float>(rand()) / RAND_MAX * (x_mid - 0.5f - x_min - 1.0f) +
-      1.0f;
+  float edge_length = getRandFloat01() * (x_mid - 0.5f - x_min - 1.0f) + 1.0f;
   Vector3 second = first + (sdir * edge_length);
 
   // Direction
-  float dir_x = static_cast<float>(rand()) / RAND_MAX * x_range;
-  float dir_y = static_cast<float>(rand()) / RAND_MAX * y_range;
-  float dir_z = static_cast<float>(rand()) / RAND_MAX * z_range;
+  float dir_x = getRandFloat01() * x_range;
+  float dir_y = getRandFloat01() * y_range;
+  float dir_z = getRandFloat01() * z_range;
   Vector3 dir = Vector3(dir_x, dir_y, dir_z);
 
   *this = Cube({first, second}, dir,
@@ -123,15 +122,14 @@ std::vector<Triangle> Cube::getTriangles() const {
 
 RegularTetrahedron::RegularTetrahedron(
     const std::array<Vector3, 4>& verts,
-    const std::array<std::array<float, 4>, 4>& color) {
-  vertices = verts;
-  this->color = color;
-}
+    const std::array<std::array<float, 4>, 4>& color)
+    : vertices(verts), color(color) {}
 
 RegularTetrahedron::RegularTetrahedron(
     const Vector3& A, float edgeLength, const Vector3& heightDirection,
     const Vector3& bottomDirection,
-    const std::array<std::array<float, 4>, 4>& color) {
+    const std::array<std::array<float, 4>, 4>& color)
+    : color(color) {
   float H = edgeLength * std::sqrt(2.0) / std::sqrt(3.0);
   Vector3 G = A + heightDirection.normalize() * H;
 
@@ -145,8 +143,11 @@ RegularTetrahedron::RegularTetrahedron(
   Vector3 D = G - Y * l / 2 - X * l * std::sqrt(3) / 2;
 
   vertices = {A, B, C, D};
-
-  this->color = color;
+  printf("vertices: %d %d %d, %d %d %d, %d %d %d, %d %d %d\n",
+         (int)vertices[0].x, (int)vertices[0].y, (int)vertices[0].z,
+         (int)vertices[1].x, (int)vertices[1].y, (int)vertices[1].z,
+         (int)vertices[2].x, (int)vertices[2].y, (int)vertices[2].z,
+         (int)vertices[3].x, (int)vertices[3].y, (int)vertices[3].z);
 }
 
 RegularTetrahedron::RegularTetrahedron(float x_min, float x_max, float y_min,
@@ -159,27 +160,25 @@ RegularTetrahedron::RegularTetrahedron(float x_min, float x_max, float y_min,
   float z_range = z_max - z_min;
 
   // Vertex A
-  float A_x = static_cast<float>(rand()) / RAND_MAX + (x_mid - 0.5f);
-  float A_y = static_cast<float>(rand()) / RAND_MAX + (y_mid - 0.5f);
-  float A_z = static_cast<float>(rand()) / RAND_MAX + (z_mid - 0.5f);
-  Vector3 A = Vector3(A_x, A_y, A_z);
+  float A_x = getRandFloat01() + (x_mid - 0.5f);
+  float A_y = getRandFloat01() + (y_mid - 0.5f);
+  float A_z = getRandFloat01() + (z_mid - 0.5f);
+  Vector3 A(A_x, A_y, A_z);
 
-  float edge_length =
-      static_cast<float>(rand()) / RAND_MAX * (x_mid - 0.5f - x_min - 1.0f) +
-      1.0f;
+  float edge_length = getRandFloat01() * (x_mid - 0.5f - x_min - 1.0f) + 1.0f;
 
   // Direction
-  float hdir_x = static_cast<float>(rand()) / RAND_MAX * x_range;
-  float hdir_y = static_cast<float>(rand()) / RAND_MAX * y_range;
-  float hdir_z = static_cast<float>(rand()) / RAND_MAX * z_range;
-  Vector3 hdir = Vector3(hdir_x, hdir_y, hdir_z);
+  float hdir_x = getRandFloat01() * x_range;
+  float hdir_y = getRandFloat01() * y_range;
+  float hdir_z = getRandFloat01() * z_range;
+  Vector3 hdir(hdir_x, hdir_y, hdir_z);
 
-  float bdir_x = static_cast<float>(rand()) / RAND_MAX * x_range;
-  float bdir_y = static_cast<float>(rand()) / RAND_MAX * y_range;
-  float bdir_z = static_cast<float>(rand()) / RAND_MAX * z_range;
-  Vector3 bdir = Vector3(bdir_x, bdir_y, bdir_z);
-  while (bdir.cross(hdir).normalize().isZero()) {
-    bdir_z = static_cast<float>(rand()) / RAND_MAX * z_range;
+  float bdir_x = getRandFloat01() * x_range;
+  float bdir_y = getRandFloat01() * y_range;
+  float bdir_z = getRandFloat01() * z_range;
+  Vector3 bdir(bdir_x, bdir_y, bdir_z);
+  while (bdir.cross(hdir).isZero()) {
+    bdir_z = getRandFloat01() * z_range;
     bdir = Vector3(bdir_x, bdir_y, bdir_z);
   }
 

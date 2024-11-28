@@ -306,11 +306,15 @@ __global__ void kernelRenderPixels(float *projectedVertices) {
   // rasterization
   float px = (x + 0.5f) / cuConstRendererParams.imageWidth;
   float py = (y + 0.5f) / cuConstRendererParams.imageHeight;
-  rasterization(cuConstRendererParams.numTriangles, projectedVertices,
-                cuConstRendererParams.vertices, cuConstRendererParams.colors,
-                &cuConstRendererParams
-                     .imageData[4 * (y * cuConstRendererParams.imageWidth + x)],
-                px, py);
+  if (x < cuConstRendererParams.imageWidth &&
+      y < cuConstRendererParams.imageHeight) {
+    rasterization(
+        cuConstRendererParams.numTriangles, projectedVertices,
+        cuConstRendererParams.vertices, cuConstRendererParams.colors,
+        &cuConstRendererParams
+             .imageData[4 * (y * cuConstRendererParams.imageWidth + x)],
+        px, py);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -401,6 +405,7 @@ void CudaRenderer::setup() {
   cudaMalloc(&cudaDeviceImageData,
              sizeof(float) * 4 * image->width * image->height);
   cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
+  cudaMalloc(&projectedVertices, sizeof(float) * 3 * numTriangles);
 
   cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
              cudaMemcpyHostToDevice);
@@ -496,8 +501,6 @@ void CudaRenderer::render() {
                  sizeof(float), cudaMemcpyHostToDevice);
     }
   }
-  float *projectedVertices;
-  cudaMalloc(&projectedVertices, sizeof(float) * 3 * numTriangles);
   dim3 blockDim(BLOCK_WIDTH * BLOCK_WIDTH);
   dim3 gridDim(
       ceil((double)numTriangles / (double)(BLOCK_WIDTH * BLOCK_WIDTH)));

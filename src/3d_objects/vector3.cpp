@@ -20,6 +20,10 @@ Vector3 Vector3::operator/(float s) const {
   return Vector3(x / s, y / s, z / s);
 }
 
+bool Vector3::operator==(const Vector3& v) const {
+  return x == v.x && y == v.y && z == v.z;
+}
+
 float Vector3::magnitude() const { return std::sqrt(x * x + y * y + z * z); }
 
 Vector3 Vector3::normalize() const {

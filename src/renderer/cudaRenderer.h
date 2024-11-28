@@ -12,6 +12,7 @@ class CudaRenderer : public Renderer {
   float* cudaDeviceColors;
   float* cudaDeviceImageData;
   float* deviceCombinedMatrix;
+  float* projectedVertices;
 
  public:
   CudaRenderer();
