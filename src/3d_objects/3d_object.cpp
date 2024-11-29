@@ -89,7 +89,8 @@ Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
   float sdir_z = getRandFloat01() * z_range;
   Vector3 sdir = Vector3(sdir_x, sdir_y, sdir_z).normalize();
 
-  float edge_length = getRandFloat01() * (x_mid - 0.5f - x_min - 1.0f) + 1.0f;
+  float max_edge_length = std::cbrt(x_mid - 0.5f - x_min);
+  float edge_length = getRandFloat01() * (max_edge_length - 1.0f) + 1.0f;
   Vector3 second = first + (sdir * edge_length);
 
   // Direction

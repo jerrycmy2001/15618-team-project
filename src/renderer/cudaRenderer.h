@@ -5,6 +5,8 @@
 
 class CudaRenderer : public Renderer {
  private:
+  int numProcs;
+  int numBatches;
   Image* image;
 
   float* cudaDeviceVertices;
@@ -15,7 +17,7 @@ class CudaRenderer : public Renderer {
   float* projectedVertices;
 
  public:
-  CudaRenderer();
+  CudaRenderer(int numProcs, int numBatches);
   virtual ~CudaRenderer();
 
   const Image* getImage();

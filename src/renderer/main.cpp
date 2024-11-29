@@ -40,6 +40,8 @@ int main(int argc, char** argv) {
   int benchmarkFrameStart = -1;
   int benchmarkFrameEnd = -1;
   int imageSize = 1150;
+  int numProcs = 1;
+  int numBatches = 1;
 
   std::string sceneNameStr;
   std::string frameFilename;
@@ -51,12 +53,12 @@ int main(int argc, char** argv) {
   // parse commandline options ////////////////////////////////////////////
   int opt;
   static struct option long_options[] = {
-      {"help", 0, 0, '?'}, {"check", 0, 0, 'c'},    {"bench", 1, 0, 'b'},
-      {"file", 1, 0, 'f'}, {"renderer", 1, 0, 'r'}, {"size", 1, 0, 's'},
-      {0, 0, 0, 0}};
+      {"help", 0, 0, '?'},      {"check", 0, 0, 'c'},    {"bench", 1, 0, 'b'},
+      {"file", 1, 0, 'f'},      {"renderer", 1, 0, 'r'}, {"size", 1, 0, 's'},
+      {"processes", 1, 0, 'p'}, {"batches", 1, 0, 'a'},  {0, 0, 0, 0}};
 
-  while ((opt = getopt_long(argc, argv, "b:f:r:s:c?", long_options, NULL)) !=
-         EOF) {
+  while ((opt = getopt_long(argc, argv, "b:f:r:s:p:a:c?", long_options,
+                            NULL)) != EOF) {
     switch (opt) {
       case 'b':
         if (sscanf(optarg, "%d:%d", &benchmarkFrameStart, &benchmarkFrameEnd) !=
@@ -79,6 +81,12 @@ int main(int argc, char** argv) {
         break;
       case 's':
         imageSize = atoi(optarg);
+        break;
+      case 'p':
+        numProcs = atoi(optarg);
+        break;
+      case 'a':
+        numBatches = atoi(optarg);
         break;
       case '?':
       default:
@@ -109,7 +117,7 @@ int main(int argc, char** argv) {
     Renderer* cuda_renderer;
 
     ref_renderer = new RefRenderer();
-    cuda_renderer = new CudaRenderer();
+    cuda_renderer = new CudaRenderer(numProcs, numBatches);
 
     ref_renderer->allocOutputImage(imageSize, imageSize);
     ref_renderer->loadScene(sceneName);
@@ -124,7 +132,7 @@ int main(int argc, char** argv) {
     if (useRefRenderer)
       renderer = new RefRenderer();
     else
-      renderer = new CudaRenderer();
+      renderer = new CudaRenderer(numProcs, numBatches);
 
     renderer->allocOutputImage(imageSize, imageSize);
     renderer->loadScene(sceneName);

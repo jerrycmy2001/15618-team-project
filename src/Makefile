@@ -1,6 +1,6 @@
 # Compiler settings
 CXX = g++ -m64
-NVCC = nvcc
+NVCC = nvcc -Xcompiler -fopenmp
 CXXFLAGS=-O3 -Wall -g
 NVCCFLAGS=-O3 -m64
 LIBS = GL glut cudart

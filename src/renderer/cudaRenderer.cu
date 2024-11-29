@@ -4,6 +4,7 @@
 #define _USE_MATH_DEFINES
 #include <cfloat>
 #include <math.h>
+#include <omp.h>
 #include <stdio.h>
 #include <vector>
 
@@ -299,9 +300,10 @@ __global__ void kernelProjectVertices(float *combinedMatrix,
 }
 
 // render the image by pixels
-__global__ void kernelRenderPixels(float *projectedVertices) {
+__global__ void kernelRenderPixels(int batchIdx, float *projectedVertices) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int y = blockIdx.y * blockDim.y + threadIdx.y;
+  int y =
+      batchIdx * blockDim.y * gridDim.y + blockIdx.y * blockDim.y + threadIdx.y;
 
   // rasterization
   float px = (x + 0.5f) / cuConstRendererParams.imageWidth;
@@ -319,7 +321,8 @@ __global__ void kernelRenderPixels(float *projectedVertices) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-CudaRenderer::CudaRenderer() {
+CudaRenderer::CudaRenderer(int numProcs, int numBatches)
+    : numProcs(numProcs), numBatches(numBatches) {
   image = NULL;
 
   cudaDeviceVertices = NULL;
@@ -511,8 +514,14 @@ void CudaRenderer::render() {
   int imageWidth = image->width;
   int imageHeight = image->height;
   blockDim = dim3(BLOCK_WIDTH, BLOCK_WIDTH);
-  gridDim = dim3(ceil((double)imageWidth / (double)BLOCK_WIDTH),
-                 ceil((double)imageHeight / (double)BLOCK_WIDTH));
-  kernelRenderPixels<<<gridDim, blockDim>>>(projectedVertices);
+  gridDim = dim3(
+      ceil((double)imageWidth / (double)BLOCK_WIDTH),
+      ceil((double)imageHeight / (double)BLOCK_WIDTH / (double)numBatches));
+  omp_set_num_threads(numProcs);
+#pragma omp parallel for default(shared) schedule(dynamic)
+  for (int batchIdx = 0; batchIdx < numBatches; batchIdx++) {
+    printf("batchIdx: %d\n", batchIdx);
+    kernelRenderPixels<<<gridDim, blockDim>>>(batchIdx, projectedVertices);
+  }
   cudaCheckError(cudaDeviceSynchronize());
 }
