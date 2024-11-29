@@ -46,7 +46,7 @@ void RefRenderer::clearImage() { image->clear(1.f, 1.f, 1.f, 1.f); }
 
 void RefRenderer::loadScene(SceneName name) {
   printf("Loading scene\n");
-  this->sceneName = name;
+  sceneName = name;
   scene = ::loadScene(name, image->width, image->height);
   scene->serialize(numTriangles, vertices, colors);
   printf("numTriangles: %d\n", numTriangles);

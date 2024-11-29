@@ -4,6 +4,7 @@
 #include "image.h"
 #include "platformgl.h"
 #include "renderer.h"
+#include "scene.h"
 
 void renderPicture();
 
@@ -127,7 +128,7 @@ void renderPicture() {
   }
 }
 
-void startRendererWithDisplay(Renderer* renderer) {
+void startRendererWithDisplay(Renderer* renderer, SceneName sceneName) {
   // setup the display
 
   const Image* img = renderer->getImage();
@@ -135,6 +136,12 @@ void startRendererWithDisplay(Renderer* renderer) {
   gDisplay.renderer = renderer;
   gDisplay.updateSim = true;
   gDisplay.pauseSim = false;
+
+  if (sceneName == SceneName::VISUAL_ILLUSION) {
+    gDisplay.pauseSim = true;
+    gDisplay.updateSim = false;
+  }
+
   gDisplay.printStats = true;
   gDisplay.lastFrameTime = CycleTimer::currentSeconds();
   gDisplay.width = img->width;

@@ -9,7 +9,7 @@
 #include "refRenderer.h"
 #include "renderer.h"
 
-void startRendererWithDisplay(Renderer* renderer);
+void startRendererWithDisplay(Renderer* renderer, SceneName sceneName);
 void startBenchmark(Renderer* renderer, int startFrame, int totalFrames,
                     const std::string& frameFilename);
 void CheckBenchmark(Renderer* ref_renderer, Renderer* cuda_renderer,
@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
                      benchmarkFrameEnd - benchmarkFrameStart, frameFilename);
     else {
       glutInit(&argc, argv);
-      startRendererWithDisplay(renderer);
+      startRendererWithDisplay(renderer, sceneName);
     }
   }
 

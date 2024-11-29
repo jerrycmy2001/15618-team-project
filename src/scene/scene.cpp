@@ -21,6 +21,8 @@ SceneName getSceneFromName(std::string name) {
     return SceneName::RAND;
   } else if (name == "title") {
     return SceneName::COURSE_TITLE;
+  } else if (name == "illusion") {
+    return SceneName::VISUAL_ILLUSION;
   } else {
     printf("Unknown scene name: %s\n", name.c_str());
     exit(1);

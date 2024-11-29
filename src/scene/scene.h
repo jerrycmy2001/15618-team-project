@@ -15,6 +15,7 @@ typedef enum {
   TETRAHEDRON,
   RAND,
   COURSE_TITLE,
+  VISUAL_ILLUSION,
 } SceneName;
 
 SceneName getSceneFromName(std::string name);

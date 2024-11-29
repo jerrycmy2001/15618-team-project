@@ -7,7 +7,6 @@
 class RefRenderer : public Renderer {
  private:
   Image* image;
-  SceneName sceneName;
 
  public:
   RefRenderer();

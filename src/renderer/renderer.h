@@ -12,11 +12,11 @@ struct Image;
 #define NUM_SPARKS 20
 class Renderer {
  protected:
-  SceneName sceneName;
   std::shared_ptr<Scene> scene;
   int numTriangles;
   float *vertices;
   float *colors;
+  SceneName sceneName;
 
  public:
   virtual ~Renderer(){};

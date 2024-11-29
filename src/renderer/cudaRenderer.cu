@@ -65,12 +65,6 @@ struct GlobalConstants {
 // place to put read-only variables).
 __constant__ GlobalConstants cuConstRendererParams;
 
-// Read-only lookup tables used to quickly compute noise (needed by
-// advanceAnimation for the snowflake scene)
-__constant__ int cuConstNoiseYPermutationTable[256];
-__constant__ int cuConstNoiseXPermutationTable[256];
-__constant__ float cuConstNoise1DValueTable[256];
-
 // Color ramp table needed for the color ramp lookup shader
 #define COLOR_MAP_SIZE 5
 __constant__ float cuConstColorRamp[COLOR_MAP_SIZE][3];
@@ -262,16 +256,6 @@ static __device__ void rasterization(int numTriangles,
   float minZ = FLT_MAX;
   int renderedIdx = -1;
   for (int i = 0; i < numTriangles; i++) {
-    for (int j = 0; j < 3; j++) {
-      if (projectedVertices[i * 9 + j * 3] < 0 ||
-          projectedVertices[i * 9 + j * 3] > 1 ||
-          projectedVertices[i * 9 + j * 3 + 1] < 0 ||
-          projectedVertices[i * 9 + j * 3 + 1] > 1) {
-        printf("out of range: %d, %f, %f\n", i,
-               projectedVertices[i * 9 + j * 3],
-               projectedVertices[i * 9 + j * 3 + 1]);
-      }
-    }
     float z = getTriangleZ(x, y, projectedVertices + i * 9);
     if (z < 0) {
       // not in triangle
@@ -448,16 +432,6 @@ void CudaRenderer::setup() {
   params.imageData = cudaDeviceImageData;
 
   cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
-
-  // Also need to copy over the noise lookup tables, so we can
-  // implement noise on the GPU
-  int *permX;
-  int *permY;
-  float *value1D;
-  getNoiseTables(&permX, &permY, &value1D);
-  cudaMemcpyToSymbol(cuConstNoiseXPermutationTable, permX, sizeof(int) * 256);
-  cudaMemcpyToSymbol(cuConstNoiseYPermutationTable, permY, sizeof(int) * 256);
-  cudaMemcpyToSymbol(cuConstNoise1DValueTable, value1D, sizeof(float) * 256);
 
   // Copy over the color table that's used by the shading
   // function for circles in the snowflake demo
