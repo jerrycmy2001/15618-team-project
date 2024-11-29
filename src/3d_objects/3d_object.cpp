@@ -59,6 +59,11 @@ Cube::Cube(const std::array<Vector3, 2>& verts, const Vector3& direction,
   Vector3 scaledPerpendicularForV3 = perpendicularForV3 * sideLength;
 
   newVerts[3] = verts[0] + scaledPerpendicularForV3;
+  // printf("%d %d %d %d %d %d %d %d %d %d %d %d\n", (int)newVerts[0].x,
+  //        (int)newVerts[0].y, (int)newVerts[0].z, (int)newVerts[1].x,
+  //        (int)newVerts[1].y, (int)newVerts[1].z, (int)newVerts[2].x,
+  //        (int)newVerts[2].y, (int)newVerts[2].z, (int)newVerts[3].x,
+  //        (int)newVerts[3].y, (int)newVerts[3].z);
 
   *this = Cube(newVerts, color);
 }
@@ -89,8 +94,9 @@ Cube::Cube(float x_min, float x_max, float y_min, float y_max, float z_min,
   float sdir_z = getRandFloat01() * z_range;
   Vector3 sdir = Vector3(sdir_x, sdir_y, sdir_z).normalize();
 
-  float max_edge_length = std::cbrt(x_mid - 0.5f - x_min);
-  float edge_length = getRandFloat01() * (max_edge_length - 1.0f) + 1.0f;
+  // float max_edge_length = std::cbrt(x_mid - 0.5f - x_min);
+  // float edge_length = getRandFloat01() * (max_edge_length - 1.0f) + 1.0f;
+  float edge_length = getRandFloat01() * (x_mid - 0.5f - x_min - 1.0f) + 1.0f;
   Vector3 second = first + (sdir * edge_length);
 
   // Direction

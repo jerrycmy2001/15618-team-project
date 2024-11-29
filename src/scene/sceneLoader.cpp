@@ -96,18 +96,15 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
       for (float x = min_range; x < max_range; x += stride)
         for (float y = min_range; y < max_range; y += stride)
           for (float z = min_range; z < max_range; z += stride) {
-            // for (int i = 0; i < object_num; ++i) {
-            // if (rand() % 2 == 0) {
-            // printf("Get a tetrahedron\n");
-            // objs.push_back(new RegularTetrahedron(x, x + stride, y, y +
-            // stride,
-            //                                       z, z + stride));
-            // } else {
-            //   printf("Get a cube\n");
-            objs.push_back(
-                new Cube(x, x + stride, y, y + stride, z, z + stride));
-            // }
-            // }
+            if (rand() % 2 == 0) {
+              printf("Get a tetrahedron\n");
+              objs.push_back(new RegularTetrahedron(x, x + stride, y,
+                                                    y + stride, z, z + stride));
+            } else {
+              printf("Get a cube\n");
+              objs.push_back(
+                  new Cube(x, x + stride, y, y + stride, z, z + stride));
+            }
           }
       printf("objs size is %ld\n", objs.size());
 

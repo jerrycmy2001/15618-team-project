@@ -232,7 +232,7 @@ static __device__ void transformVertex(float *vertex, float *projectedVertex,
 }
 
 static __device__ float getTriangleZ(float px, float py,
-                                     float *projectedVertices) {
+                                     const float *projectedVertices) {
   float x1 = projectedVertices[0];
   float y1 = projectedVertices[1];
   float x2 = projectedVertices[3];
@@ -255,11 +255,23 @@ static __device__ float getTriangleZ(float px, float py,
   }
 }
 
-static __device__ void rasterization(int numTriangles, float *projectedVertices,
+static __device__ void rasterization(int numTriangles,
+                                     const float *projectedVertices,
                                      const float *vertices, const float *colors,
                                      float *outColor, float x, float y) {
   float minZ = FLT_MAX;
+  int renderedIdx = -1;
   for (int i = 0; i < numTriangles; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (projectedVertices[i * 9 + j * 3] < 0 ||
+          projectedVertices[i * 9 + j * 3] > 1 ||
+          projectedVertices[i * 9 + j * 3 + 1] < 0 ||
+          projectedVertices[i * 9 + j * 3 + 1] > 1) {
+        printf("out of range: %d, %f, %f\n", i,
+               projectedVertices[i * 9 + j * 3],
+               projectedVertices[i * 9 + j * 3 + 1]);
+      }
+    }
     float z = getTriangleZ(x, y, projectedVertices + i * 9);
     if (z < 0) {
       // not in triangle
@@ -267,11 +279,14 @@ static __device__ void rasterization(int numTriangles, float *projectedVertices,
     }
     if (z < minZ) {
       minZ = z;
-      outColor[0] = colors[i * 4];
-      outColor[1] = colors[i * 4 + 1];
-      outColor[2] = colors[i * 4 + 2];
-      outColor[3] = colors[i * 4 + 3];
+      renderedIdx = i;
     }
+  }
+  if (renderedIdx != -1) {
+    outColor[0] = colors[renderedIdx * 4];
+    outColor[1] = colors[renderedIdx * 4 + 1];
+    outColor[2] = colors[renderedIdx * 4 + 2];
+    outColor[3] = colors[renderedIdx * 4 + 3];
   }
 }
 
@@ -287,7 +302,7 @@ __global__ void kernelProjectVertices(float *combinedMatrix,
   __syncthreads();
 
   // project vertices
-  if (idx < cuConstRendererParams.numTriangles * 3) {
+  if (idx < cuConstRendererParams.numTriangles * 9) {
     transformVertex(&cuConstRendererParams.vertices[3 * idx],
                     projectedVertices + idx * 3, sCombinedMatrix);
     // printf("original vertices: %f %f %f\n",
@@ -408,7 +423,7 @@ void CudaRenderer::setup() {
   cudaMalloc(&cudaDeviceImageData,
              sizeof(float) * 4 * image->width * image->height);
   cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
-  cudaMalloc(&projectedVertices, sizeof(float) * 3 * numTriangles);
+  cudaMalloc(&projectedVertices, sizeof(float) * 9 * numTriangles);
 
   cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
              cudaMemcpyHostToDevice);
@@ -506,10 +521,24 @@ void CudaRenderer::render() {
   }
   dim3 blockDim(BLOCK_WIDTH * BLOCK_WIDTH);
   dim3 gridDim(
-      ceil((double)numTriangles / (double)(BLOCK_WIDTH * BLOCK_WIDTH)));
+      ceil((double)(numTriangles * 9) / (double)(BLOCK_WIDTH * BLOCK_WIDTH)));
   kernelProjectVertices<<<gridDim, blockDim>>>(deviceCombinedMatrix,
                                                projectedVertices);
   cudaCheckError(cudaDeviceSynchronize());
+
+  // float *hostProjectedVertices = new float[numTriangles * 9];
+  // cudaMemcpy(hostProjectedVertices, projectedVertices,
+  //            numTriangles * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+  // for (int i = 0; i < numTriangles; i++) {
+  //   printf("Triangle %d: ", i);
+  //   for (int j = 0; j < 3; j++) {
+  //     printf("%f, %f, %f", hostProjectedVertices[i * 9 + j * 3],
+  //            hostProjectedVertices[i * 9 + j * 3 + 1],
+  //            hostProjectedVertices[i * 9 + j * 3 + 2]);
+  //   }
+  //   printf("\n");
+  // }
+  // delete[] hostProjectedVertices;
 
   int imageWidth = image->width;
   int imageHeight = image->height;
@@ -520,7 +549,6 @@ void CudaRenderer::render() {
   omp_set_num_threads(numProcs);
 #pragma omp parallel for default(shared) schedule(dynamic)
   for (int batchIdx = 0; batchIdx < numBatches; batchIdx++) {
-    printf("batchIdx: %d\n", batchIdx);
     kernelRenderPixels<<<gridDim, blockDim>>>(batchIdx, projectedVertices);
   }
   cudaCheckError(cudaDeviceSynchronize());
