@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include "Vector3.h"
 #include "camera.h"
+#include "vector3.h"
 
 class CameraRotator {
  private:

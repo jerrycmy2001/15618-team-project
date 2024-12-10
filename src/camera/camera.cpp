@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdio>
 
-#include "Vector3.h"
+#include "vector3.h"
 
 Camera::Camera() {}
 

@@ -18,10 +18,6 @@ void CheckBenchmark(Renderer* ref_renderer, Renderer* cuda_renderer,
 
 void usage(const char* progname) {
   printf("Usage: %s [options] scenename\n", progname);
-  printf(
-      "Valid scenenames are: rgb, rgby, rand10k, rand100k, biglittle, "
-      "littlebig, pattern, bouncingballs, fireworks, hypnosis, snow, "
-      "snowsingle\n");
   printf("Program Options:\n");
   printf(
       "  -b  --bench <START:END>    Benchmark mode, do not create display. "

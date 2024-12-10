@@ -2,7 +2,7 @@
 #include <limits>
 
 #include "3d_object.h"
-#include "Vector3.h"
+#include "vector3.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdio.h>
@@ -45,11 +45,9 @@ void RefRenderer::allocOutputImage(int width, int height) {
 void RefRenderer::clearImage() { image->clear(1.f, 1.f, 1.f, 1.f); }
 
 void RefRenderer::loadScene(SceneName name) {
-  printf("Loading scene\n");
   sceneName = name;
   scene = ::loadScene(name, image->width, image->height);
   scene->serialize(numTriangles, vertices, colors);
-  printf("numTriangles: %d\n", numTriangles);
 }
 
 // advanceAnimation --
@@ -158,7 +156,7 @@ void RefRenderer::render() {
 
   float* projectedVertices = new float[numTriangles * 3 * 3];
 
-  printf("Rendering...\n");
+  // printf("Rendering...\n");
 
   // printf("original vertices: \n");
   // for (int i = 0; i < numTriangles; ++i) {
@@ -189,7 +187,7 @@ void RefRenderer::render() {
   // }
   // printf("\n");
 
-  printf("Rasterizing...\n");
+  // printf("Rasterizing...\n");
 
   for (int x = 0; x < image->width; x++) {
     for (int y = 0; y < image->height; y++) {

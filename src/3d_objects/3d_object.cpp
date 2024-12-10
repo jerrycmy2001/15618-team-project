@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdio>
 
-#include "Vector3.h"
+#include "vector3.h"
 
 float getRandFloat01() { return (float)rand() / (float)RAND_MAX; }
 
@@ -150,11 +150,11 @@ RegularTetrahedron::RegularTetrahedron(
   Vector3 D = G - Y * l / 2 - X * l * std::sqrt(3) / 2;
 
   vertices = {A, B, C, D};
-  printf("vertices: %d %d %d, %d %d %d, %d %d %d, %d %d %d\n",
-         (int)vertices[0].x, (int)vertices[0].y, (int)vertices[0].z,
-         (int)vertices[1].x, (int)vertices[1].y, (int)vertices[1].z,
-         (int)vertices[2].x, (int)vertices[2].y, (int)vertices[2].z,
-         (int)vertices[3].x, (int)vertices[3].y, (int)vertices[3].z);
+  // printf("vertices: %d %d %d, %d %d %d, %d %d %d, %d %d %d\n",
+  //        (int)vertices[0].x, (int)vertices[0].y, (int)vertices[0].z,
+  //        (int)vertices[1].x, (int)vertices[1].y, (int)vertices[1].z,
+  //        (int)vertices[2].x, (int)vertices[2].y, (int)vertices[2].z,
+  //        (int)vertices[3].x, (int)vertices[3].y, (int)vertices[3].z);
 }
 
 RegularTetrahedron::RegularTetrahedron(float x_min, float x_max, float y_min,

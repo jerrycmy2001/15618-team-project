@@ -4,7 +4,7 @@
 #include <ctime>
 #include <vector>
 
-#include "Vector3.h"
+#include "vector3.h"
 
 class Triangle;
 

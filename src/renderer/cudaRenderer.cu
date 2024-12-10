@@ -363,9 +363,7 @@ void CudaRenderer::loadScene(SceneName name) {
 }
 
 void CudaRenderer::setup() {
-
   int deviceCount = 0;
-  bool isFastGPU = false;
   std::string name;
   cudaError_t err = cudaGetDeviceCount(&deviceCount);
 
@@ -377,9 +375,6 @@ void CudaRenderer::setup() {
     cudaDeviceProp deviceProps;
     cudaGetDeviceProperties(&deviceProps, i);
     name = deviceProps.name;
-    if (name.compare("GeForce RTX 2080") == 0) {
-      isFastGPU = true;
-    }
 
     printf("Device %d: %s\n", i, deviceProps.name);
     printf("   SMs:        %d\n", deviceProps.multiProcessorCount);
@@ -388,12 +383,6 @@ void CudaRenderer::setup() {
     printf("   CUDA Cap:   %d.%d\n", deviceProps.major, deviceProps.minor);
   }
   printf("---------------------------------------------------------\n");
-  if (!isFastGPU) {
-    printf("WARNING: "
-           "You're not running on a fast GPU, please consider using "
-           "NVIDIA RTX 2080.\n");
-    printf("---------------------------------------------------------\n");
-  }
 
   // By this time the scene should be loaded.  Now copy all the key
   // data structures into device memory so they are accessible to
