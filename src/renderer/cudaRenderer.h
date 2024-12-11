@@ -9,12 +9,12 @@ class CudaRenderer : public Renderer {
   int numBatches;
   Image* image;
 
-  float* cudaDeviceVertices;
-  int* cudaDeviceEndIndices;
-  float* cudaDeviceColors;
-  float* cudaDeviceImageData;
-  float* deviceCombinedMatrix;
-  float* projectedVertices;
+  //   float* cudaDeviceVertices;
+  //   int* cudaDeviceEndIndices;
+  //   float* cudaDeviceColors;
+  //   float* cudaDeviceImageData;
+  //   float* deviceCombinedMatrix;
+  //   float* projectedVertices;
 
  public:
   CudaRenderer(int numProcs, int numBatches);

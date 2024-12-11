@@ -63,7 +63,7 @@ struct GlobalConstants {
 // be stored in special "constant" memory on the GPU. (we didn't talk
 // about this type of memory in class, but constant memory is a fast
 // place to put read-only variables).
-__constant__ GlobalConstants cuConstRendererParams;
+// __constant__ GlobalConstants cuConstRendererParams;
 
 // Color ramp table needed for the color ramp lookup shader
 #define COLOR_MAP_SIZE 5
@@ -74,22 +74,39 @@ __constant__ float cuConstColorRamp[COLOR_MAP_SIZE][3];
 // Clear the image, setting all pixels to the specified color rgba
 __global__ void kernelClearImage(float r, float g, float b, float a) {
 
+  // int imageX = blockIdx.x * blockDim.x + threadIdx.x;
+  // int imageY = blockIdx.y * blockDim.y + threadIdx.y;
+
+  // int width = cuConstRendererParams.imageWidth;
+  // int height = cuConstRendererParams.imageHeight;
+
+  // if (imageX >= width || imageY >= height)
+  //   return;
+
+  // int offset = 4 * (imageY * width + imageX);
+  // float4 value = make_float4(r, g, b, a);
+
+  // // Write to global memory: As an optimization, this code uses a float4
+  // // store, which results in more efficient code than if it were coded as
+  // // four separate float stores.
+  // *(float4 *)(&cuConstRendererParams.imageData[offset]) = value;
+}
+
+__global__ void kernelClearImage(float *image, int imageWidth, int imageHeight,
+                                 float r, float g, float b, float a) {
   int imageX = blockIdx.x * blockDim.x + threadIdx.x;
   int imageY = blockIdx.y * blockDim.y + threadIdx.y;
 
-  int width = cuConstRendererParams.imageWidth;
-  int height = cuConstRendererParams.imageHeight;
-
-  if (imageX >= width || imageY >= height)
+  if (imageX >= imageWidth || imageY >= imageHeight)
     return;
 
-  int offset = 4 * (imageY * width + imageX);
+  int offset = 4 * (imageY * imageWidth + imageX);
   float4 value = make_float4(r, g, b, a);
 
   // Write to global memory: As an optimization, this code uses a float4
   // store, which results in more efficient code than if it were coded as
   // four separate float stores.
-  *(float4 *)(&cuConstRendererParams.imageData[offset]) = value;
+  *(float4 *)(&image[offset]) = value;
 }
 
 // kernelAdvanceCamera -- (CUDA device code)
@@ -275,7 +292,8 @@ static __device__ void rasterization(int numTriangles,
 }
 
 __global__ void kernelProjectVertices(float *combinedMatrix,
-                                      float *projectedVertices) {
+                                      float *projectedVertices,
+                                      int numTriangles, float *vertices) {
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   __shared__ float sCombinedMatrix[4][4];
 
@@ -286,9 +304,9 @@ __global__ void kernelProjectVertices(float *combinedMatrix,
   __syncthreads();
 
   // project vertices
-  if (idx < cuConstRendererParams.numTriangles * 9) {
-    transformVertex(&cuConstRendererParams.vertices[3 * idx],
-                    projectedVertices + idx * 3, sCombinedMatrix);
+  if (idx < numTriangles * 9) {
+    transformVertex(&vertices[3 * idx], projectedVertices + idx * 3,
+                    sCombinedMatrix);
     // printf("original vertices: %f %f %f\n",
     //        cuConstRendererParams.vertices[3 * idx],
     //        cuConstRendererParams.vertices[3 * idx + 1],
@@ -299,22 +317,20 @@ __global__ void kernelProjectVertices(float *combinedMatrix,
 }
 
 // render the image by pixels
-__global__ void kernelRenderPixels(int batchIdx, float *projectedVertices) {
+__global__ void kernelRenderPixels(int batchIdx, float *projectedVertices,
+                                   float *deviceImageData, int numTriangles,
+                                   int imageWidth, int imageHeight,
+                                   float *vertices, float *colors) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y =
       batchIdx * blockDim.y * gridDim.y + blockIdx.y * blockDim.y + threadIdx.y;
 
   // rasterization
-  float px = (x + 0.5f) / cuConstRendererParams.imageWidth;
-  float py = (y + 0.5f) / cuConstRendererParams.imageHeight;
-  if (x < cuConstRendererParams.imageWidth &&
-      y < cuConstRendererParams.imageHeight) {
-    rasterization(
-        cuConstRendererParams.numTriangles, projectedVertices,
-        cuConstRendererParams.vertices, cuConstRendererParams.colors,
-        &cuConstRendererParams
-             .imageData[4 * (y * cuConstRendererParams.imageWidth + x)],
-        px, py);
+  float px = (x + 0.5f) / imageWidth;
+  float py = (y + 0.5f) / imageHeight;
+  if (x < imageWidth && y < imageHeight) {
+    rasterization(numTriangles, projectedVertices, vertices, colors,
+                  &deviceImageData[4 * (y * imageWidth + x)], px, py);
   }
 }
 
@@ -324,9 +340,9 @@ CudaRenderer::CudaRenderer(int numProcs, int numBatches)
     : numProcs(numProcs), numBatches(numBatches) {
   image = NULL;
 
-  cudaDeviceVertices = NULL;
-  cudaDeviceEndIndices = NULL;
-  cudaDeviceColors = NULL;
+  // cudaDeviceVertices = NULL;
+  // cudaDeviceEndIndices = NULL;
+  // cudaDeviceColors = NULL;
 }
 
 CudaRenderer::~CudaRenderer() {
@@ -335,11 +351,11 @@ CudaRenderer::~CudaRenderer() {
     delete image;
   }
 
-  if (cudaDeviceVertices) {
-    cudaFree(cudaDeviceVertices);
-    cudaFree(cudaDeviceEndIndices);
-    cudaFree(cudaDeviceColors);
-  }
+  // if (cudaDeviceVertices) {
+  //   cudaFree(cudaDeviceVertices);
+  //   cudaFree(cudaDeviceEndIndices);
+  //   cudaFree(cudaDeviceColors);
+  // }
 }
 
 const Image *CudaRenderer::getImage() {
@@ -349,9 +365,9 @@ const Image *CudaRenderer::getImage() {
 
   printf("Copying image data from device\n");
 
-  cudaMemcpy(image->data, cudaDeviceImageData,
-             sizeof(float) * 4 * image->width * image->height,
-             cudaMemcpyDeviceToHost);
+  // cudaMemcpy(image->data, cudaDeviceImageData,
+  //            sizeof(float) * 4 * image->width * image->height,
+  //            cudaMemcpyDeviceToHost);
 
   return image;
 }
@@ -372,6 +388,7 @@ void CudaRenderer::setup() {
   printf("Found %d CUDA devices\n", deviceCount);
 
   for (int i = 0; i < deviceCount; i++) {
+    cudaSetDevice(i);
     cudaDeviceProp deviceProps;
     cudaGetDeviceProperties(&deviceProps, i);
     name = deviceProps.name;
@@ -383,44 +400,31 @@ void CudaRenderer::setup() {
     printf("   CUDA Cap:   %d.%d\n", deviceProps.major, deviceProps.minor);
   }
   printf("---------------------------------------------------------\n");
+  cudaSetDevice(0);
 
-  // By this time the scene should be loaded.  Now copy all the key
-  // data structures into device memory so they are accessible to
-  // CUDA kernels
-  //
-  // See the CUDA Programmer's Guide for descriptions of
-  // cudaMalloc and cudaMemcpy
+  // cudaMalloc(&cudaDeviceVertices, sizeof(float) * 9 * numTriangles);
+  // cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numTriangles);
+  // cudaMalloc(&cudaDeviceImageData,
+  //            sizeof(float) * 4 * image->width * image->height);
+  // cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
+  // cudaMalloc(&projectedVertices, sizeof(float) * 9 * numTriangles);
 
-  cudaMalloc(&cudaDeviceVertices, sizeof(float) * 9 * numTriangles);
-  cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numTriangles);
-  cudaMalloc(&cudaDeviceImageData,
-             sizeof(float) * 4 * image->width * image->height);
-  cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
-  cudaMalloc(&projectedVertices, sizeof(float) * 9 * numTriangles);
+  // cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
+  //            cudaMemcpyHostToDevice);
+  // cudaMemcpy(cudaDeviceColors, colors, sizeof(float) * 4 * numTriangles,
+  //            cudaMemcpyHostToDevice);
 
-  cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
-             cudaMemcpyHostToDevice);
-  cudaMemcpy(cudaDeviceColors, colors, sizeof(float) * 4 * numTriangles,
-             cudaMemcpyHostToDevice);
+  // GlobalConstants params;
+  // params.sceneName = sceneName;
+  // params.numTriangles = numTriangles;
+  // params.vertices = cudaDeviceVertices;
+  // params.colors = cudaDeviceColors;
+  // params.imageWidth = image->width;
+  // params.imageHeight = image->height;
+  // params.imageData = cudaDeviceImageData;
 
-  // Initialize parameters in constant memory.  We didn't talk about
-  // constant memory in class, but the use of read-only constant
-  // memory here is an optimization over just sticking these values
-  // in device global memory.  NVIDIA GPUs have a few special tricks
-  // for optimizing access to constant memory.  Using global memory
-  // here would have worked just as well.  See the Programmer's
-  // Guide for more information about constant memory.
-
-  GlobalConstants params;
-  params.sceneName = sceneName;
-  params.numTriangles = numTriangles;
-  params.vertices = cudaDeviceVertices;
-  params.colors = cudaDeviceColors;
-  params.imageWidth = image->width;
-  params.imageHeight = image->height;
-  params.imageData = cudaDeviceImageData;
-
-  cudaMemcpyToSymbol(cuConstRendererParams, &params, sizeof(GlobalConstants));
+  // cudaMemcpyToSymbol(cuConstRendererParams, &params,
+  // sizeof(GlobalConstants));
 
   // Copy over the color table that's used by the shading
   // function for circles in the snowflake demo
@@ -476,22 +480,35 @@ void CudaRenderer::render() {
   //   printf("%f, %f, %f, %f\n", combinedMatrix[i][0], combinedMatrix[i][1],
   //          combinedMatrix[i][2], combinedMatrix[i][3]);
   // }
+  float *deviceCombinedMatrix;
+  float *projectedVertices;
+  float *deviceVertices;
+  cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
+  cudaMalloc(&deviceVertices, sizeof(float) * 9 * numTriangles);
+  cudaMalloc(&projectedVertices, sizeof(float) * 9 * numTriangles);
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
       cudaMemcpy(deviceCombinedMatrix + i * 4 + j, &combinedMatrix[i][j],
                  sizeof(float), cudaMemcpyHostToDevice);
     }
   }
+  cudaMemcpy(deviceVertices, vertices, sizeof(float) * 9 * numTriangles,
+             cudaMemcpyHostToDevice);
+
   dim3 blockDim(BLOCK_WIDTH * BLOCK_WIDTH);
   dim3 gridDim(
       ceil((double)(numTriangles * 9) / (double)(BLOCK_WIDTH * BLOCK_WIDTH)));
-  kernelProjectVertices<<<gridDim, blockDim>>>(deviceCombinedMatrix,
-                                               projectedVertices);
+  kernelProjectVertices<<<gridDim, blockDim>>>(
+      deviceCombinedMatrix, projectedVertices, numTriangles, deviceVertices);
   cudaCheckError(cudaDeviceSynchronize());
 
-  // float *hostProjectedVertices = new float[numTriangles * 9];
-  // cudaMemcpy(hostProjectedVertices, projectedVertices,
-  //            numTriangles * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+  float *hostProjectedVertices = new float[numTriangles * 9];
+  cudaMemcpy(hostProjectedVertices, projectedVertices,
+             numTriangles * 9 * sizeof(float), cudaMemcpyDeviceToHost);
+
+  cudaFree(deviceCombinedMatrix);
+  cudaFree(projectedVertices);
+  cudaFree(deviceVertices);
   // for (int i = 0; i < numTriangles; i++) {
   //   printf("Triangle %d: ", i);
   //   for (int j = 0; j < 3; j++) {
@@ -501,18 +518,70 @@ void CudaRenderer::render() {
   //   }
   //   printf("\n");
   // }
-  // delete[] hostProjectedVertices;
+  int numGPUs = 0;
+  cudaGetDeviceCount(&numGPUs);
+  omp_set_num_threads(numGPUs);
+#pragma omp parallel for default(shared) schedule(static)
+  for (int i = 0; i < numGPUs; i++) {
+    cudaSetDevice(i);
+    // cudaSetDevice(0);
+    int imageWidth = image->width;
+    int imageHeight = image->height;
 
-  int imageWidth = image->width;
-  int imageHeight = image->height;
-  blockDim = dim3(BLOCK_WIDTH, BLOCK_WIDTH);
-  gridDim = dim3(
-      ceil((double)imageWidth / (double)BLOCK_WIDTH),
-      ceil((double)imageHeight / (double)BLOCK_WIDTH / (double)numBatches));
-  omp_set_num_threads(numProcs);
-#pragma omp parallel for default(shared) schedule(dynamic)
-  for (int batchIdx = 0; batchIdx < numBatches; batchIdx++) {
-    kernelRenderPixels<<<gridDim, blockDim>>>(batchIdx, projectedVertices);
+    float *cudaDeviceVertices;
+    float *cudaDeviceColors;
+    float *cudaDeviceImageData;
+    float *deviceCombinedMatrix;
+    float *deviceProjectedVertices;
+    float *deviceImageData;
+    cudaMalloc(&cudaDeviceVertices, sizeof(float) * 9 * numTriangles);
+    cudaMalloc(&cudaDeviceColors, sizeof(float) * 4 * numTriangles);
+    cudaMalloc(&cudaDeviceImageData,
+               sizeof(float) * 4 * image->width * image->height);
+    cudaMalloc(&deviceCombinedMatrix, sizeof(float) * 16);
+    cudaMalloc(&deviceProjectedVertices, numTriangles * 9 * sizeof(float));
+    cudaMalloc(&deviceImageData, imageWidth * imageHeight * 4 * sizeof(float));
+
+    cudaMemcpy(cudaDeviceVertices, vertices, sizeof(float) * 9 * numTriangles,
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(cudaDeviceColors, colors, sizeof(float) * 4 * numTriangles,
+               cudaMemcpyHostToDevice);
+    cudaMemcpy(deviceProjectedVertices, hostProjectedVertices,
+               numTriangles * 9 * sizeof(float), cudaMemcpyHostToDevice);
+    for (int ii = 0; ii < 4; ii++) {
+      for (int j = 0; j < 4; j++) {
+        cudaMemcpy(deviceCombinedMatrix + ii * 4 + j, &combinedMatrix[ii][j],
+                   sizeof(float), cudaMemcpyHostToDevice);
+      }
+    }
+    dim3 blockDim(16, 16, 1);
+    dim3 gridDim((image->width + blockDim.x - 1) / blockDim.x,
+                 (image->height + blockDim.y - 1) / blockDim.y);
+    kernelClearImage<<<gridDim, blockDim>>>(deviceImageData, imageWidth,
+                                            imageHeight, 1.f, 1.f, 1.f, 1.f);
+    cudaDeviceSynchronize();
+
+    blockDim = dim3(BLOCK_WIDTH, BLOCK_WIDTH);
+    gridDim =
+        dim3(ceil((double)imageWidth / (double)BLOCK_WIDTH),
+             ceil((double)imageHeight / (double)BLOCK_WIDTH / (double)numGPUs));
+    kernelRenderPixels<<<gridDim, blockDim>>>(
+        i, deviceProjectedVertices, deviceImageData, numTriangles, imageWidth,
+        imageHeight, cudaDeviceVertices, cudaDeviceColors);
+    cudaCheckError(cudaDeviceSynchronize());
+
+    int offset = i * (imageHeight / numGPUs) * imageWidth * 4;
+    cudaMemcpy(image->data + offset, deviceImageData + offset,
+               sizeof(float) * 4 * imageWidth * (imageHeight / numGPUs),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(cudaDeviceVertices);
+    cudaFree(cudaDeviceColors);
+    cudaFree(cudaDeviceImageData);
+    cudaFree(deviceCombinedMatrix);
+    cudaFree(deviceProjectedVertices);
+    cudaFree(deviceImageData);
   }
-  cudaCheckError(cudaDeviceSynchronize());
+
+  delete[] hostProjectedVertices;
 }
