@@ -17,8 +17,28 @@ SceneName getSceneFromName(std::string name) {
     return SceneName::CUBE;
   } else if (name == "tetrahedron") {
     return SceneName::TETRAHEDRON;
-  } else if (name == "rand") {
-    return SceneName::RAND;
+  } else if (name == "rand8") {
+    return SceneName::RAND8;
+  } else if (name == "rand27") {
+    return SceneName::RAND27;
+  } else if (name == "rand64") {
+    return SceneName::RAND64;
+  } else if (name == "rand125") {
+    return SceneName::RAND125;
+  } else if (name == "rand216") {
+    return SceneName::RAND216;
+  } else if (name == "rand343") {
+    return SceneName::RAND343;
+  } else if (name == "rand512") {
+    return SceneName::RAND512;
+  } else if (name == "rand729") {
+    return SceneName::RAND729;
+  } else if (name == "rand1000") {
+    return SceneName::RAND1000;
+  } else if (name == "rand3375") {
+    return SceneName::RAND3375;
+  } else if (name == "rand8000") {
+    return SceneName::RAND8000;
   } else if (name == "title") {
     return SceneName::COURSE_TITLE;
   } else if (name == "illusion") {

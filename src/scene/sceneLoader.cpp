@@ -19,7 +19,7 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
   CameraRotator camRotator;
   float min_range = 0.0f;
   float max_range = 100.0f;
-  float stride = 20.0f;
+  float stride;
   std::vector<std::vector<Object3D*>> chars;
   switch (sceneName) {
     case SceneName::SINGLE_TRIANGLE:
@@ -91,8 +91,40 @@ std::shared_ptr<Scene> loadScene(SceneName sceneName, int windowWidth,
                    windowWidth, windowHeight);
       camRotator = CameraRotator({0, 0, 0}, {0, 0, 1}, 0.04f);
       break;
-    case SceneName::RAND:
-      srand(time(NULL));
+    case SceneName::RAND8:
+    case SceneName::RAND27:
+    case SceneName::RAND64:
+    case SceneName::RAND125:
+    case SceneName::RAND216:
+    case SceneName::RAND343:
+    case SceneName::RAND512:
+    case SceneName::RAND729:
+    case SceneName::RAND1000:
+    case SceneName::RAND3375:
+    case SceneName::RAND8000:
+      if (sceneName == SceneName::RAND8) {
+        stride = max_range / 2.0f;
+      } else if (sceneName == SceneName::RAND27) {
+        stride = max_range / 3.0f;
+      } else if (sceneName == SceneName::RAND64) {
+        stride = max_range / 4.0f;
+      } else if (sceneName == SceneName::RAND125) {
+        stride = max_range / 5.0f;
+      } else if (sceneName == SceneName::RAND216) {
+        stride = max_range / 6.0f;
+      } else if (sceneName == SceneName::RAND343) {
+        stride = max_range / 7.0f;
+      } else if (sceneName == SceneName::RAND512) {
+        stride = max_range / 8.0f;
+      } else if (sceneName == SceneName::RAND729) {
+        stride = max_range / 9.0f;
+      } else if (sceneName == SceneName::RAND1000) {
+        stride = max_range / 10.0f;
+      } else if (sceneName == SceneName::RAND3375) {
+        stride = max_range / 15.0f;
+      } else if (sceneName == SceneName::RAND8000) {
+        stride = max_range / 20.0f;
+      }
       for (float x = min_range; x < max_range; x += stride)
         for (float y = min_range; y < max_range; y += stride)
           for (float z = min_range; z < max_range; z += stride) {

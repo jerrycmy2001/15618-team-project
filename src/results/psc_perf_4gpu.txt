@@ -238,34 +238,154 @@ Render:   7.2459 ms
 Total:    7.3248 ms
 
 Overall:  0.0194 sec (note units are seconds)
-===== Scene rand CPU =====
+===== Scene rand8 CPU =====
 Rendering to 1150x1150 image
 
 Running benchmark, 1 frames, beginning at frame 0 ...
-Clear:    5.4934 ms
-Advance:  0.0201 ms
-Render:   5842.1253 ms
-Total:    5847.6388 ms
+Clear:    4.7557 ms
+Advance:  0.0200 ms
+Render:   241.5475 ms
+Total:    246.3232 ms
 
-Overall:  5.8592 sec (note units are seconds)
-===== Scene rand GPU =====
+Overall:  0.2574 sec (note units are seconds)
+===== Scene rand8 GPU =====
 Rendering to 1150x1150 image
 ---------------------------------------------------------
 Initializing CUDA for CudaRenderer
 Found 4 CUDA devices
-Device 0: Tesla V100-SXM2-32GB
+Device 0: Tesla V100-SXM3-32GB
    SMs:        80
    Global mem: 32494 MB
    CUDA Cap:   7.0
-Device 1: Tesla V100-SXM2-32GB
+Device 1: Tesla V100-SXM3-32GB
    SMs:        80
    Global mem: 32494 MB
    CUDA Cap:   7.0
-Device 2: Tesla V100-SXM2-32GB
+Device 2: Tesla V100-SXM3-32GB
    SMs:        80
    Global mem: 32494 MB
    CUDA Cap:   7.0
-Device 3: Tesla V100-SXM2-32GB
+Device 3: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    0.0887 ms
+Advance:  0.0209 ms
+Render:   13.6079 ms
+Total:    13.7175 ms
+
+Overall:  0.0251 sec (note units are seconds)
+===== Scene rand27 CPU =====
+Rendering to 1150x1150 image
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    5.6026 ms
+Advance:  0.0225 ms
+Render:   1020.5235 ms
+Total:    1026.1486 ms
+
+Overall:  1.0375 sec (note units are seconds)
+===== Scene rand27 GPU =====
+Rendering to 1150x1150 image
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 4 CUDA devices
+Device 0: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 1: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 2: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 3: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    0.1572 ms
+Advance:  0.0201 ms
+Render:   15.9801 ms
+Total:    16.1574 ms
+
+Overall:  0.0282 sec (note units are seconds)
+===== Scene rand64 CPU =====
+Rendering to 1150x1150 image
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    5.5270 ms
+Advance:  0.0195 ms
+Render:   3125.9120 ms
+Total:    3131.4586 ms
+
+Overall:  3.1426 sec (note units are seconds)
+===== Scene rand64 GPU =====
+Rendering to 1150x1150 image
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 4 CUDA devices
+Device 0: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 1: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 2: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 3: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    0.0908 ms
+Advance:  0.0206 ms
+Render:   13.5757 ms
+Total:    13.6871 ms
+
+Overall:  0.0258 sec (note units are seconds)
+===== Scene rand125 CPU =====
+Rendering to 1150x1150 image
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    6.2177 ms
+Advance:  0.0248 ms
+Render:   7693.2105 ms
+Total:    7699.4530 ms
+
+Overall:  7.7114 sec (note units are seconds)
+===== Scene rand125 GPU =====
+Rendering to 1150x1150 image
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 4 CUDA devices
+Device 0: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 1: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 2: Tesla V100-SXM3-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 3: Tesla V100-SXM3-32GB
    SMs:        80
    Global mem: 32494 MB
    CUDA Cap:   7.0
@@ -278,3 +398,47 @@ Render:   10.0513 ms
 Total:    10.2023 ms
 
 Overall:  0.0218 sec (note units are seconds)
+===== Scene rand343 GPU =====
+Rendering to 1150x1150 image
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 2 CUDA devices
+Device 0: Tesla V100-SXM2-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 1: Tesla V100-SXM2-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    0.0621 ms
+Advance:  0.0279 ms
+Render:   11.2418 ms
+Total:    11.3318 ms
+
+Overall:  0.0235 sec (note units are seconds)
+===== Scene rand1000 GPU =====
+Rendering to 1150x1150 image
+---------------------------------------------------------
+Initializing CUDA for CudaRenderer
+Found 2 CUDA devices
+Device 0: Tesla V100-SXM2-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+Device 1: Tesla V100-SXM2-32GB
+   SMs:        80
+   Global mem: 32494 MB
+   CUDA Cap:   7.0
+---------------------------------------------------------
+
+Running benchmark, 1 frames, beginning at frame 0 ...
+Clear:    0.0598 ms
+Advance:  0.0374 ms
+Render:   26.8165 ms
+Total:    26.9137 ms
+
+Overall:  0.0541 sec (note units are seconds)
